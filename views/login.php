@@ -4,6 +4,17 @@ require __DIR__ . '/layout-top.php';
 ?>
 <main class="login-wrap">
     <section class="login-card">
+        <div class="login-actions">
+            <button
+                class="button is-small theme-toggle"
+                type="button"
+                aria-label="Switch to dark theme"
+                aria-pressed="false"
+            >
+                <span data-theme-icon class="theme-icon" aria-hidden="true">&#9790;</span>
+                <span data-theme-label>Dark theme</span>
+            </button>
+        </div>
         <div class="brand large">
             <span class="brand-mark">A</span>
             <span>Agri<span class="brand-light">Info</span></span>

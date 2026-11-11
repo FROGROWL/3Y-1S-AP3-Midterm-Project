@@ -10,7 +10,17 @@ unset($_SESSION['flash']);
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e($title) ?> | <?= e(envv('APP_NAME', 'AgriInfo')) ?></title>
-    <meta name="theme-color" content="#f7f8f2">
+    <meta name="theme-color" content="#f3f6f8">
+    <script>
+        try {
+            const savedTheme = localStorage.getItem('agri-info-theme');
+            document.documentElement.dataset.theme = savedTheme === 'dark' || savedTheme === 'light'
+                ? savedTheme
+                : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        } catch {
+            document.documentElement.dataset.theme = 'light';
+        }
+    </script>
     <link
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css"
@@ -63,6 +73,17 @@ unset($_SESSION['flash']);
                 </div>
 
                 <div class="navbar-end">
+                    <div class="navbar-item">
+                        <button
+                            class="button is-small theme-toggle"
+                            type="button"
+                            aria-label="Switch to dark theme"
+                            aria-pressed="false"
+                        >
+                            <span data-theme-icon class="theme-icon" aria-hidden="true">&#9790;</span>
+                            <span data-theme-label>Dark theme</span>
+                        </button>
+                    </div>
                     <div class="navbar-item user-chip">
                         <span><?= e($currentUser['full_name'] ?? '') ?></span>
                         <span class="tag is-light"><?= e($currentUser['role'] ?? 'Staff') ?></span>
