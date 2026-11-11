@@ -1,1 +1,12 @@
-document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('.navbar-burger').forEach(b=>b.addEventListener('click',()=>{b.classList.toggle('is-active');document.getElementById(b.dataset.target)?.classList.toggle('is-active')}));});
+document.addEventListener('DOMContentLoaded', () => {
+    const menuToggles = document.querySelectorAll('.navbar-burger');
+
+    menuToggles.forEach((toggle) => {
+        toggle.addEventListener('click', () => {
+            toggle.classList.toggle('is-active');
+
+            const menu = document.getElementById(toggle.dataset.target);
+            menu?.classList.toggle('is-active');
+        });
+    });
+});

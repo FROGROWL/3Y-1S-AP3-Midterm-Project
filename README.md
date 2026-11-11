@@ -1,34 +1,118 @@
-# AgriInfo ? Agriculture Information System
+# AgriInfo: Agriculture Information System
 
-Responsive PHP/PDO application for managing farmers, farms, crops, plantings, harvests, dashboard totals, and harvest reports. Bulma is the primary UI framework. PostgreSQL hosted by Supabase is the configured target.
+AgriInfo is a PHP application for managing farmers, farms, crops, plantings, and harvests. It connects to Supabase PostgreSQL through PDO and uses Bulma for its interface.
 
-## Requirements
-- PHP 8.1+ with pdo_pgsql enabled
-- Supabase PostgreSQL project credentials; optional pgAdmin 4
+## Run it step by step
 
-## Install
-1. Copy .env.example to .env and enter Supabase host, port, database, username, password, and SSL mode. Never commit .env. Set APP_ENV=production outside local development.
-2. Set INSTALL_ADMIN_EMAIL, INSTALL_ADMIN_PASSWORD (12+ characters), and optionally INSTALL_ADMIN_NAME in .env.
-3. From this directory run php install.php. It applies sql/schema.sql, sql/lookup_data.sql, and sql/sample_data.sql without truncating existing records, and ensures the first administrator account. Remove the installer admin settings after setup.
-4. Place under the web root and browse to http://localhost/agri-info-system/. Or run php -S localhost:8000.
+### 1. Prepare Supabase
 
-The provided PHP references contained local credentials; they were not copied. No Supabase credentials were available, so live connection must be configured before installation or sign-in.
+1. Create a Supabase project.
+2. Open the project?s **Connect** dialog and copy the PostgreSQL host, port, database name, username, and password.
+3. Keep the connection details available for the next step. The PHP app and pgAdmin should use the same database.
 
-## Supabase and pgAdmin
-Create a Supabase project and obtain connection parameters from its Connect dialog. Configure .env using those exact values and DB_SSLMODE=require. In pgAdmin, register a server with the same host, port, database, username, and password; set SSL mode Require. Run the PHP installer to apply SQL to the same hosted database.
+### 2. Check PHP in XAMPP
 
-## Features
-- Session authentication, password hashing, CSRF protection, staff/administrator roles, administrator account creation, and audit events
-- CRUD across all five modules; controlled planting status and five required harvest remarks
-- Search, selectable sorting, pagination, deletion confirmation, validation, and notifications
-- Dashboard totals/latest harvests and date-filtered crop yield, average, gross value report with print action
-- PostgreSQL foreign keys, constraints, timestamps, and repeatable 15-farmer, 15-farm, 10-crop, 50-planting, and 20-harvest sample records
+1. Open **XAMPP Control Panel** and start Apache.
+2. Open a terminal and run:
 
-## Layout
-index.php/module.php route and CRUD; ootstrap.php/Database.php provide PDO; sql/ contains install scripts; iews/ pages/layout; ssets/ styles/scripts; docs/normalization.md covers ERD and UNF?3NF.
+   ```powershell
+   C:\xampp\php\php.exe -m | findstr /i "pdo_pgsql pgsql"
+   ```
+
+3. Confirm that `pdo_pgsql` and `pgsql` appear. If they do not, enable those extensions in `C:\xampp\php\php.ini`, then restart Apache.
+
+### 3. Configure the application
+
+From `C:\xampp\htdocs\Midterm Project\agri-info-system`, copy the example environment file:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Open `.env` and enter your Supabase values:
+
+```dotenv
+DB_HOST=your-supabase-host
+DB_PORT=5432
+DB_NAME=postgres
+DB_USERNAME=your-supabase-username
+DB_PASSWORD=your-supabase-password
+DB_SSLMODE=require
+INSTALL_ADMIN_EMAIL=you@example.com
+INSTALL_ADMIN_PASSWORD=choose-a-password-at-least-12-characters
+INSTALL_ADMIN_NAME="System Administrator"
+```
+
+Use the exact connection values Supabase gives you. Keep `.env` private; Git ignores it. Do not put database credentials in PHP source files.
+
+### 4. Install the database and sample records
+
+In the same terminal, run:
+
+```powershell
+Set-Location "C:\xampp\htdocs\Midterm Project\agri-info-system"
+C:\xampp\php\php.exe install.php
+```
+
+The installer applies `sql/schema.sql`, `sql/lookup_data.sql`, and `sql/sample_data.sql`, then creates the administrator account. The demo seed includes 15 farmers, 15 farms, 10 crops, 50 plantings, and 20 harvests. It does not truncate existing application records.
+
+After installation, remove or blank the `INSTALL_ADMIN_EMAIL` and `INSTALL_ADMIN_PASSWORD` lines in `.env`. Keep the administrator password somewhere safe.
+
+### 5. Open the application
+
+With Apache running in XAMPP, open this address in your browser:
+
+```text
+http://localhost/Midterm%20Project/agri-info-system/
+```
+
+Sign in with the administrator email and password configured in step 3. Use **Users** to add Staff or additional Administrator accounts.
+
+### Alternative: run PHP?s local server
+
+Instead of starting Apache, run these commands from the project folder:
+
+```powershell
+Set-Location "C:\xampp\htdocs\Midterm Project\agri-info-system"
+C:\xampp\php\php.exe -S localhost:8000
+```
+
+Then visit `http://localhost:8000`. Leave that terminal running while you use the app; press **Ctrl+C** there to stop the server.
+
+## Connect pgAdmin 4
+
+In pgAdmin, register a server with the same Supabase host, port, database, username, and password. Set SSL mode to **Require**. The app and pgAdmin will then inspect and use the same hosted PostgreSQL database.
+
+## Main features
+
+- Login, password hashing, CSRF protection, Staff and Administrator roles, and audit records.
+- CRUD pages for farmers, farms, crops, plantings, and harvests.
+- Search, sorting, pagination, relationship dropdowns, validation, and delete confirmation.
+- Dashboard totals, recent harvest activity, and date-filtered crop reports.
+- PostgreSQL relationships, constraints, timestamps, lookup values, and sample records.
+
+## Project layout
+
+- `index.php`, `module.php`, `modules.php`: request routing and shared module pages.
+- `bootstrap.php`, `Database.php`: environment loading, sessions, and PDO connection.
+- `install.php`, `sql/`: database installation and demo data.
+- `views/`: page templates.
+- `assets/`: styles and navigation script.
+- `docs/`: normalization, data dictionary, and verification notes.
+
+For data relationships and normalization, see [docs/normalization.md](docs/normalization.md). For the table columns, see [docs/data-dictionary.md](docs/data-dictionary.md).
 
 ## GitHub
-A new local Git repository is initialized; .env is excluded. Add the authorized remote using git remote add origin <repository-url>, then commit and push. No GitHub repository URL or authentication was available, so nothing has been pushed.
 
-## Limitations
-The PDF could not be text-extracted in the available environment; requirements follow the pasted prompt and provided PHP schema/sample data. Bulma and Google Fonts are loaded from CDNs and require browser network access.
+A local Git repository is initialized. Add your GitHub remote when you have its URL and credentials, then push the commits:
+
+```powershell
+git remote add origin <repository-url>
+git push -u origin master
+```
+
+No remote URL or GitHub authentication was supplied during initial setup, so the commits are local only.
+
+## Notes
+
+The supplied PHP reference scripts contained local database credentials; those values were not copied. No Supabase credentials were provided, so database installation and live features require you to configure `.env` first. The PDF text could not be extracted in the available environment; the implementation follows the pasted requirements and PHP references. Bulma CSS and Google Fonts load from CDNs, so the browser needs internet access for those assets.

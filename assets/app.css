@@ -1,1 +1,224 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');:root{--ink:#19291f;--green:#2f6849;--pale:#edf3e8;--line:#e8ece6}html{background:#f7f8f5}body{font-family:"DM Sans",sans-serif;color:var(--ink);min-height:100vh}h1,h2,h3,.brand{font-family:Manrope,sans-serif}.app-nav{background:#fff;border-bottom:1px solid var(--line);min-height:4.5rem}.brand{font-weight:800;font-size:1.16rem;gap:.55rem;color:var(--ink)!important}.brand-light{font-weight:500;color:#79917e}.brand-mark{display:inline-grid;place-items:center;width:2rem;height:2rem;border-radius:9px;background:#dcebd9;color:#2f6849;font-weight:800}.navbar-item{font-size:.9rem;color:#526257}.user-chip{gap:.65rem}.welcome{background:radial-gradient(ellipse at 85% 20%,#dcebd6,transparent 42%),linear-gradient(110deg,#f0f4eb,#fafbf8);border-bottom:1px solid var(--line)}.welcome .hero-body{padding:3.25rem 1.5rem}.welcome .title{letter-spacing:-.04em;color:#193b28}.eyebrow{font-size:.68rem;letter-spacing:.13em;font-weight:700;color:#788a7a}.stat-card{height:100%;border:1px solid var(--line);box-shadow:0 5px 20px #24362908;transition:transform .16s,box-shadow .16s}.stat-card:hover{transform:translateY(-2px);box-shadow:0 10px 28px #24362912}.stat-label{color:#7b877d;font-size:.8rem}.stat-number{font:700 2rem Manrope,sans-serif;color:#203b2a;margin:.5rem 0}.stat-number small{font-size:.8rem}.stat-foot{font-size:.75rem;color:#567a60;display:flex;justify-content:space-between}.harvest-stat{background:#f0f5eb}.table-card,.form-card,.quick-box{border:1px solid var(--line);box-shadow:0 5px 20px #24362908}.table thead th{color:#859087;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--line)}.table td{vertical-align:middle}.actions{display:flex;gap:.35rem}.actions form{display:inline}.quick-link{display:flex;justify-content:space-between;padding:.9rem 0;border-bottom:1px solid var(--line);color:#344c39;font-size:.9rem}.quick-link:last-child{border:0}.app-footer{background:transparent;padding:2rem 1.5rem;color:#88938a;font-size:.8rem}.app-footer span{padding:0 .35rem}.notice{margin-top:1rem}.login-wrap{min-height:calc(100vh - 9rem);display:grid;place-items:center;padding:2rem}.login-card{width:min(100%,430px);padding:2.5rem;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 70px #2233220b}.brand.large{font-size:1.5rem}.pagination-list{font-size:.8rem;color:#7a867d;padding:.5rem}.button.is-primary{background:#356c4d}.button.is-primary:hover{background:#28563c}.select select:focus,.input:focus{border-color:#75a784;box-shadow:0 0 0 .125em #4a8b5b22}@media print{.app-nav,.app-footer,.button,form{display:none!important}.box{box-shadow:none;border:0}}
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
+
+:root {
+    --ink: #19291f;
+    --green: #2f6849;
+    --pale: #edf3e8;
+    --line: #e8ece6;
+}
+
+html {
+    background: #f7f8f5;
+}
+
+body {
+    min-height: 100vh;
+    color: var(--ink);
+    font-family: "DM Sans", sans-serif;
+}
+
+h1,
+h2,
+h3,
+.brand {
+    font-family: Manrope, sans-serif;
+}
+
+.app-nav {
+    min-height: 4.5rem;
+    background: #fff;
+    border-bottom: 1px solid var(--line);
+}
+
+.brand {
+    gap: 0.55rem;
+    color: var(--ink) !important;
+    font-size: 1.16rem;
+    font-weight: 800;
+}
+
+.brand-light {
+    color: #79917e;
+    font-weight: 500;
+}
+
+.brand-mark {
+    display: inline-grid;
+    width: 2rem;
+    height: 2rem;
+    place-items: center;
+    border-radius: 9px;
+    background: #dcebd9;
+    color: #2f6849;
+    font-weight: 800;
+}
+
+.navbar-item {
+    color: #526257;
+    font-size: 0.9rem;
+}
+
+.user-chip {
+    gap: 0.65rem;
+}
+
+.welcome {
+    background:
+        radial-gradient(ellipse at 85% 20%, #dcebd6, transparent 42%),
+        linear-gradient(110deg, #f0f4eb, #fafbf8);
+    border-bottom: 1px solid var(--line);
+}
+
+.welcome .hero-body {
+    padding: 3.25rem 1.5rem;
+}
+
+.welcome .title {
+    color: #193b28;
+    letter-spacing: -0.04em;
+}
+
+.eyebrow {
+    color: #788a7a;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+}
+
+.stat-card {
+    height: 100%;
+    border: 1px solid var(--line);
+    box-shadow: 0 5px 20px #24362908;
+    transition: transform 0.16s, box-shadow 0.16s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px #24362912;
+}
+
+.stat-label {
+    color: #7b877d;
+    font-size: 0.8rem;
+}
+
+.stat-number {
+    margin: 0.5rem 0;
+    color: #203b2a;
+    font: 700 2rem Manrope, sans-serif;
+}
+
+.stat-number small {
+    font-size: 0.8rem;
+}
+
+.stat-foot {
+    display: flex;
+    justify-content: space-between;
+    color: #567a60;
+    font-size: 0.75rem;
+}
+
+.harvest-stat {
+    background: #f0f5eb;
+}
+
+.table-card,
+.form-card,
+.quick-box {
+    border: 1px solid var(--line);
+    box-shadow: 0 5px 20px #24362908;
+}
+
+.table thead th {
+    border-bottom: 1px solid var(--line);
+    color: #859087;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.actions {
+    display: flex;
+    gap: 0.35rem;
+}
+
+.actions form {
+    display: inline;
+}
+
+.quick-link {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--line);
+    color: #344c39;
+    font-size: 0.9rem;
+}
+
+.quick-link:last-child {
+    border: 0;
+}
+
+.app-footer {
+    padding: 2rem 1.5rem;
+    background: transparent;
+    color: #88938a;
+    font-size: 0.8rem;
+}
+
+.notice {
+    margin-top: 1rem;
+}
+
+.login-wrap {
+    display: grid;
+    min-height: calc(100vh - 9rem);
+    padding: 2rem;
+    place-items: center;
+}
+
+.login-card {
+    width: min(100%, 430px);
+    padding: 2.5rem;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 20px 70px #2233220b;
+}
+
+.brand.large {
+    font-size: 1.5rem;
+}
+
+.button.is-primary {
+    background: #356c4d;
+}
+
+.button.is-primary:hover {
+    background: #28563c;
+}
+
+.select select:focus,
+.input:focus {
+    border-color: #75a784;
+    box-shadow: 0 0 0 0.125em #4a8b5b22;
+}
+
+@media print {
+    .app-nav,
+    .app-footer,
+    .button,
+    form {
+        display: none !important;
+    }
+
+    .box {
+        border: 0;
+        box-shadow: none;
+    }
+}
