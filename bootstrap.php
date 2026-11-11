@@ -117,12 +117,28 @@ function check_csrf(): void
 
 function user(): ?array
 {
-    return $_SESSION['user'] ?? null;
+    $sessionUser = $_SESSION['user'] ?? null;
+
+    return is_array($sessionUser) ? $sessionUser : null;
 }
 
 function require_login(): void
 {
-    if (!user()) {
+    $sessionUser = user();
+    $hasRequiredFields = $sessionUser
+        && isset(
+            $sessionUser['user_id'],
+            $sessionUser['full_name'],
+            $sessionUser['email'],
+            $sessionUser['role']
+        );
+    $hasValidRole = $hasRequiredFields
+        && in_array($sessionUser['role'], ['Administrator', 'Staff'], true);
+
+    if (!$hasValidRole) {
+        unset($_SESSION['user']);
+        session_regenerate_id(true);
+        flash('info', 'Your sign-in session expired. Please sign in again.');
         go('page=login');
     }
 }

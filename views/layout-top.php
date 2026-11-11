@@ -1,5 +1,6 @@
 <?php
 $title = $layoutTitle ?? 'AgriInfo';
+$currentUser = user();
 $notice = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
 ?>
@@ -17,7 +18,7 @@ unset($_SESSION['flash']);
     <link rel="stylesheet" href="assets/app.css">
 </head>
 <body>
-<?php if (user()): ?>
+<?php if ($currentUser): ?>
     <nav class="navbar app-nav">
         <div class="container">
             <div class="navbar-brand">
@@ -56,15 +57,15 @@ unset($_SESSION['flash']);
                             <?= e($label) ?>
                         </a>
                     <?php endforeach; ?>
-                    <?php if (user()['role'] === 'Administrator'): ?>
+                    <?php if (($currentUser['role'] ?? null) === 'Administrator'): ?>
                         <a class="navbar-item" href="<?= e(url('page=users')) ?>">Users</a>
                     <?php endif; ?>
                 </div>
 
                 <div class="navbar-end">
                     <div class="navbar-item user-chip">
-                        <span><?= e(user()['full_name']) ?></span>
-                        <span class="tag is-light"><?= e(user()['role']) ?></span>
+                        <span><?= e($currentUser['full_name'] ?? '') ?></span>
+                        <span class="tag is-light"><?= e($currentUser['role'] ?? 'Staff') ?></span>
                     </div>
                     <div class="navbar-item">
                         <form method="post" action="<?= e(url('page=logout')) ?>">
