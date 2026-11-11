@@ -43,7 +43,7 @@ require __DIR__ . '/layout-top.php';
 
 <section class="section pt-5">
     <div class="container">
-        <div class="columns is-multiline">
+        <div class="columns is-multiline dashboard-stats">
             <?php foreach ($stats as $label => $value): ?>
                 <div class="column is-one-fifth">
                     <a class="box stat-card" href="<?= e(url('page=' . $label)) ?>">

@@ -60,7 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
             toggle.classList.toggle('is-active');
 
             const menu = document.getElementById(toggle.dataset.target);
-            menu?.classList.toggle('is-active');
+            const isExpanded = menu?.classList.toggle('is-active') ?? false;
+            toggle.setAttribute('aria-expanded', String(isExpanded));
         });
     });
 });
