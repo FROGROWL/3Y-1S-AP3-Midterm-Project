@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const savedTheme = getSavedTheme();
     const initialTheme = savedTheme === 'dark' || savedTheme === 'light'
         ? savedTheme
-        : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        : (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 
     setTheme(initialTheme);
 

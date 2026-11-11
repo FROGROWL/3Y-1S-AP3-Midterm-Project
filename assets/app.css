@@ -16,6 +16,11 @@
     --success: #176b4d;
     --danger: #a12b24;
     --warning: #765000;
+    --accent-blue: #0072b2;
+    --accent-orange: #c45b00;
+    --accent-teal: #007a5e;
+    --accent-purple: #76528b;
+    --accent-gold: #8a6900;
 
     --bulma-body-background-color: var(--page-bg);
     --bulma-body-color: var(--text);
@@ -29,6 +34,9 @@
     --bulma-link-text: var(--primary);
     --bulma-link: var(--primary);
     --bulma-primary: var(--primary);
+    --bulma-input-color: var(--text);
+    --bulma-input-background-color: var(--surface);
+    --bulma-input-border-color: var(--border);
 }
 
 :root[data-theme="dark"] {
@@ -46,6 +54,11 @@
     --success: #72d6a7;
     --danger: #ff938b;
     --warning: #f2cf62;
+    --accent-blue: #56b4e9;
+    --accent-orange: #e69f00;
+    --accent-teal: #42c7a0;
+    --accent-purple: #c7a0e3;
+    --accent-gold: #f0e442;
 
     --bulma-body-background-color: var(--page-bg);
     --bulma-body-color: var(--text);
@@ -59,6 +72,9 @@
     --bulma-link-text: var(--primary);
     --bulma-link: var(--primary);
     --bulma-primary: #0072b2;
+    --bulma-input-color: var(--text);
+    --bulma-input-background-color: var(--surface);
+    --bulma-input-border-color: var(--border);
 }
 
 :root[data-theme="light"] .notification.is-success.is-light,
@@ -99,6 +115,15 @@ h3,
 .content,
 .table,
 strong {
+    color: var(--text);
+}
+
+.content p,
+.content li,
+.content td,
+.content th,
+.help,
+.pagination-ellipsis {
     color: var(--text);
 }
 
@@ -199,6 +224,12 @@ strong {
     transition: transform 0.16s, box-shadow 0.16s;
 }
 
+.columns.is-multiline > .column:nth-child(5n + 1) .stat-card { border-top: 4px solid var(--accent-blue); }
+.columns.is-multiline > .column:nth-child(5n + 2) .stat-card { border-top: 4px solid var(--accent-orange); }
+.columns.is-multiline > .column:nth-child(5n + 3) .stat-card { border-top: 4px solid var(--accent-teal); }
+.columns.is-multiline > .column:nth-child(5n + 4) .stat-card { border-top: 4px solid var(--accent-purple); }
+.columns.is-multiline > .column:nth-child(5n + 5) .stat-card { border-top: 4px solid var(--accent-gold); }
+
 .stat-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 28px #1425361a;
@@ -229,7 +260,7 @@ strong {
 }
 
 .harvest-stat {
-    border-top: 4px solid #e69f00;
+    border-top: 4px solid var(--accent-orange);
     background: var(--surface);
 }
 
@@ -247,6 +278,11 @@ strong {
 .table {
     background: var(--surface);
     color: var(--text);
+}
+
+.table thead,
+.table tfoot {
+    background: var(--surface-raised);
 }
 
 .table thead th {
@@ -411,6 +447,14 @@ strong {
     border-color: var(--border);
     background: var(--surface);
     color: var(--text);
+}
+
+.input:disabled,
+.textarea:disabled,
+.select select:disabled {
+    background: var(--surface-raised);
+    color: var(--muted);
+    opacity: 1;
 }
 
 .input::placeholder,

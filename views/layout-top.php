@@ -25,7 +25,7 @@ unset($_SESSION['flash']);
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css"
     >
-    <link rel="stylesheet" href="assets/app.css">
+    <link rel="stylesheet" href="assets/app.css?v=<?= (int) filemtime(__DIR__ . '/../assets/app.css') ?>">
 </head>
 <body>
 <?php if ($currentUser): ?>
