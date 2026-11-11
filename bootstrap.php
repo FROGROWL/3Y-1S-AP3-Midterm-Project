@@ -1,5 +1,7 @@
 <?php
 declare(strict_types=1);
+ini_set('session.use_strict_mode','1');
+session_set_cookie_params(['httponly'=>true,'secure'=>!empty($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!=='off','samesite'=>'Lax','path'=>'/']);
 session_start();
 function envv(string $name, ?string $fallback = null): ?string { static $loaded=false; if (!$loaded) { $path=__DIR__.'/.env'; if (is_file($path)) { foreach(file($path, FILE_IGNORE_NEW_LINES|FILE_SKIP_EMPTY_LINES) as $line) { $line=trim($line); if ($line==='' || str_starts_with($line,'#') || !str_contains($line,'=')) continue; [$k,$v]=explode('=',$line,2); $_ENV[trim($k)]=trim(trim($v)," \"'"); } } $loaded=true; } return $_ENV[$name] ?? $fallback; }
 function e(mixed $v): string { return htmlspecialchars((string)$v, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8'); }
