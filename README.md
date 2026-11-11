@@ -22,7 +22,7 @@ Create a Supabase project and obtain connection parameters from its Connect dial
 - CRUD across all five modules; controlled planting status and five required harvest remarks
 - Search, selectable sorting, pagination, deletion confirmation, validation, and notifications
 - Dashboard totals/latest harvests and date-filtered crop yield, average, gross value report with print action
-- PostgreSQL foreign keys, constraints, timestamps, and repeatable sample records
+- PostgreSQL foreign keys, constraints, timestamps, and repeatable 15-farmer, 15-farm, 10-crop, 50-planting, and 20-harvest sample records
 
 ## Layout
 index.php/module.php route and CRUD; ootstrap.php/Database.php provide PDO; sql/ contains install scripts; iews/ pages/layout; ssets/ styles/scripts; docs/normalization.md covers ERD and UNF?3NF.

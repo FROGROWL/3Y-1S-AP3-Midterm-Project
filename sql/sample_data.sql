@@ -10,18 +10,33 @@ WHERE NOT EXISTS(SELECT 1 FROM farm x WHERE x.farmer_id=f.farmer_id AND x.farm_n
 INSERT INTO crop(crop_name,variety,crop_category,growing_period_days,recommended_season) VALUES
 ('Rice','NSIC Rc 222','Cereal',115,'Wet Season'),('Corn','Yellow Corn','Cereal',100,'Dry Season'),('Tomato','Diamante Max','Vegetable',90,'Dry Season'),('Eggplant','Morena','Vegetable',100,'Year Round'),('Banana','Lakatan','Fruit',300,'Year Round'),('Mango','Carabao','Fruit',150,'Dry Season'),('Peanut','BPI Pn 9','Legume',110,'Dry Season'),('Cassava','Golden Yellow','Root Crop',240,'Year Round'),('Sweet Potato','NSIC Sp 30','Root Crop',120,'Year Round'),('Watermelon','Sweet 16','Fruit',85,'Dry Season')
 ON CONFLICT(crop_name,variety) DO NOTHING;
--- Ten one-to-one farm/crop planting examples. Existing records are retained.
-WITH pairs AS (
- SELECT * FROM (VALUES
- ('Dela Cruz Farm','Rice'),('Santos Rice Farm','Corn'),('Reyes Agricultural Farm','Tomato'),('Garcia Vegetable Farm','Eggplant'),('Mendoza Farm','Banana'),('Flores Corn Farm','Mango'),('Cruz Family Farm','Peanut'),('Lim Agricultural Farm','Cassava'),('Fernandez Farm','Sweet Potato'),('Villanueva Green Farm','Watermelon')
- ) AS x(farm_name,crop_name)
+-- Fifty repeatable planting examples and twenty harvest outcomes.
+WITH farms AS (SELECT farm_id,row_number() OVER(ORDER BY farm_id) rn FROM farm),
+crops AS (SELECT crop_id,growing_period_days,row_number() OVER(ORDER BY crop_id) rn FROM crop),
+examples AS (
+ SELECT n, f.farm_id, c.crop_id, c.growing_period_days,
+ CASE WHEN n<=20 THEN CURRENT_DATE-(c.growing_period_days+20+n*2) ELSE CURRENT_DATE-((n-20)*4) END planting_date,
+ CASE WHEN n<=20 THEN 'harvested' ELSE 'growing' END status
+ FROM generate_series(1,50) AS seq(n)
+ JOIN farms f ON f.rn=((n-1)%15)+1
+ JOIN crops c ON c.rn=((n-1)%10)+1
 )
 INSERT INTO planting(farm_id,crop_id,planting_date,area_planted,seed_quantity,expected_harvest_date,status)
-SELECT f.farm_id,c.crop_id,CURRENT_DATE-(c.growing_period_days+5),0.5,10,CURRENT_DATE-5,'harvested'
-FROM pairs x JOIN farm f USING(farm_name) JOIN crop c USING(crop_name)
-WHERE NOT EXISTS(SELECT 1 FROM planting p WHERE p.farm_id=f.farm_id AND p.crop_id=c.crop_id);
+SELECT x.farm_id,x.crop_id,x.planting_date,0.5+(x.n%10)*0.1,10+(x.n%8)*5,x.planting_date+x.growing_period_days,x.status
+FROM examples x
+WHERE NOT EXISTS(SELECT 1 FROM planting p WHERE p.farm_id=x.farm_id AND p.crop_id=x.crop_id AND p.planting_date=x.planting_date);
+WITH crops AS (SELECT crop_id,growing_period_days,row_number() OVER(ORDER BY crop_id) rn FROM crop),
+examples AS (
+ SELECT n, f.farm_id, c.crop_id, c.growing_period_days,
+ CURRENT_DATE-(c.growing_period_days+20+n*2) planting_date
+ FROM generate_series(1,20) AS seq(n)
+ JOIN (SELECT farm_id,row_number() OVER(ORDER BY farm_id) rn FROM farm) f ON f.rn=((n-1)%15)+1
+ JOIN crops c ON c.rn=((n-1)%10)+1
+)
 INSERT INTO harvest(planting_id,harvest_date,quantity_kg,selling_price_per_kg,quality_grade,remark_id)
-SELECT p.planting_id,CURRENT_DATE-2,1000,25,'Grade A',r.remark_id
-FROM planting p JOIN farm f USING(farm_id) JOIN crop c USING(crop_id) JOIN harvest_remark r ON r.code='good'
-WHERE f.farm_name='Dela Cruz Farm' AND c.crop_name='Rice'
-AND NOT EXISTS(SELECT 1 FROM harvest h WHERE h.planting_id=p.planting_id);
+SELECT p.planting_id,p.expected_harvest_date+2,900+(x.n*125),22+((x.n%8)*3.5),
+ CASE WHEN x.n%3=1 THEN 'Grade A' WHEN x.n%3=2 THEN 'Grade B' ELSE 'Grade C' END,
+ r.remark_id
+FROM examples x JOIN planting p ON p.farm_id=x.farm_id AND p.crop_id=x.crop_id AND p.planting_date=x.planting_date
+JOIN harvest_remark r ON r.code=CASE x.n%5 WHEN 0 THEN 'good' WHEN 1 THEN 'acceptable' WHEN 2 THEN 'low_yield' WHEN 3 THEN 'poor_quality' ELSE 'damaged' END
+WHERE NOT EXISTS(SELECT 1 FROM harvest h WHERE h.planting_id=p.planting_id);
