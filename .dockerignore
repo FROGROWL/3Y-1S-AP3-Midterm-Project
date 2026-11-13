@@ -1,0 +1,5 @@
+.env
+.git
+.sessions
+*.log
+vendor/

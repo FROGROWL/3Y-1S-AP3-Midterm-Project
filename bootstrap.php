@@ -37,6 +37,12 @@ function envv(string $name, ?string $fallback = null): ?string
         $loaded = true;
     }
 
+    $environmentValue = getenv($name);
+
+    if ($environmentValue !== false) {
+        return $environmentValue;
+    }
+
     return $_ENV[$name] ?? $fallback;
 }
 

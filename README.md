@@ -79,6 +79,32 @@ C:\xampp\php\php.exe -S localhost:8000
 
 Then visit `http://localhost:8000`. Leave that terminal running while you use the app; press **Ctrl+C** there to stop the server.
 
+## Deploy to Render
+
+This application runs on PHP and Apache, so deploy it as a **Docker Web Service**, not as a static site.
+
+1. Push the project to GitHub, then in Render choose **New + → Web Service** and connect the repository.
+2. Set the branch to `main`. Leave **Root Directory** blank when this repository itself contains `Dockerfile` and `index.php` at its top level.
+3. Select **Docker** as the runtime. Use `./Dockerfile` as the Dockerfile path and `.` as the Docker build context. No separate build or start command is needed.
+4. Add these environment variables under the service’s **Environment** page:
+
+   | Key | Value |
+   | --- | --- |
+   | `APP_ENV` | `production` |
+   | `APP_NAME` | `AgriInfo` |
+   | `DB_HOST` | Host from the Supabase Connect dialog |
+   | `DB_PORT` | `5432` |
+   | `DB_NAME` | `postgres` |
+   | `DB_USERNAME` | Username from the Supabase Connect dialog |
+   | `DB_PASSWORD` | Your Supabase database password |
+   | `DB_SSLMODE` | `require` |
+
+   Add secrets in Render’s dashboard; do not commit `.env` to GitHub. Render sets `PORT` for the web service, and the Docker image configures Apache to listen on it (default `10000`).
+
+5. Create the service and wait for the first deploy to finish. Open its `onrender.com` URL and sign in using the administrator account already installed in Supabase.
+
+The app uses the existing Supabase database; do not run `install.php` again unless you intend to initialize another database.
+
 ## Connect pgAdmin 4
 
 In pgAdmin, register a server with the same Supabase host, port, database, username, and password. Set SSL mode to **Require**. The app and pgAdmin will then inspect and use the same hosted PostgreSQL database.
