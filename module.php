@@ -202,7 +202,7 @@ $referenceTables = [
                 'not set'
             )
             || ' - ' || status.label
-            || ' (#' || planting.planting_id::text || ')",
+            || ' (#' || planting.planting_id::text || ')'",
         'from' => 'planting
             JOIN farm ON farm.farm_id = planting.farm_id
             JOIN crop_variety variety ON variety.variety_id = planting.variety_id
