@@ -1,6 +1,37 @@
 <?php
 $layoutTitle = 'Overview';
 $pdo = db();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'advance_planting') {
+    check_csrf();
+    $plantingId = filter_input(INPUT_POST, 'planting_id', FILTER_VALIDATE_INT);
+    $advance = $pdo->prepare(
+        "UPDATE planting p
+         SET status_id = next_status.status_id, updated_at = now()
+         FROM planting_status current_status, planting_status next_status
+         WHERE p.planting_id = ?
+           AND current_status.status_id = p.status_id
+           AND next_status.code = CASE current_status.code
+               WHEN 'planted' THEN 'growing'
+               WHEN 'growing' THEN 'ready'
+           END
+           AND ((current_status.code = 'planted' AND p.planting_date < CURRENT_DATE)
+             OR (current_status.code = 'growing'
+                 AND p.planting_date <= CURRENT_DATE
+                 AND p.expected_harvest_date <= CURRENT_DATE + INTERVAL '20 days'))
+         RETURNING p.planting_id"
+    );
+    $advance->execute([$plantingId]);
+    $advancedId = $advance->fetchColumn();
+    if ($advancedId) {
+        audit('UPDATE', 'planting', (int) $advancedId);
+        flash('success', 'Planting #' . (int) $advancedId . ' status updated.');
+    } else {
+        flash('danger', 'This planting no longer meets the date rule for a status update.');
+    }
+    go('page=dashboard');
+}
+
 $stats = [];
 $tables = [
     'farmers' => 'farmer',
@@ -33,6 +64,22 @@ $statusSummary = $pdo->query(
      ORDER BY s.sort_order, s.label'
 )->fetchAll();
 
+$statusWatch = $pdo->query(
+    "SELECT p.planting_id, p.planting_date, p.expected_harvest_date, s.code, s.label AS status,
+            c.crop_name, v.variety_name, f.farm_name
+     FROM planting p
+     JOIN planting_status s ON s.status_id = p.status_id
+     JOIN crop_variety v ON v.variety_id = p.variety_id
+     JOIN crop c ON c.crop_id = v.crop_id
+     JOIN farm f ON f.farm_id = p.farm_id
+     WHERE (s.code = 'planted' AND p.planting_date < CURRENT_DATE)
+        OR (s.code = 'growing' AND p.planting_date <= CURRENT_DATE
+            AND p.expected_harvest_date <= CURRENT_DATE + INTERVAL '20 days')
+     ORDER BY CASE WHEN s.code = 'planted' THEN 0 ELSE 1 END,
+              p.expected_harvest_date NULLS LAST, p.planting_id
+     LIMIT 8"
+)->fetchAll();
+
 $harvestWatch = $pdo->query(
     "SELECT p.planting_id, p.expected_harvest_date, s.label AS status,
             c.crop_name, v.variety_name, f.farm_name
@@ -41,8 +88,8 @@ $harvestWatch = $pdo->query(
      JOIN crop_variety v ON v.variety_id = p.variety_id
      JOIN crop c ON c.crop_id = v.crop_id
      JOIN farm f ON f.farm_id = p.farm_id
-     WHERE p.expected_harvest_date <= CURRENT_DATE + INTERVAL '30 days'
-       AND s.code IN ('planted', 'growing', 'ready')
+     WHERE p.expected_harvest_date <= CURRENT_DATE + INTERVAL '20 days'
+       AND s.code = 'ready'
      ORDER BY p.expected_harvest_date, p.planting_id
      LIMIT 6"
 )->fetchAll();
@@ -149,7 +196,7 @@ require __DIR__ . '/layout-top.php';
 
             <div class="column is-4">
                 <section class="box dashboard-panel harvest-watch">
-                    <p class="eyebrow">OVERDUE + NEXT 30 DAYS</p>
+                    <p class="eyebrow">READY · DUE WITHIN 20 DAYS</p>
                     <h3 class="title is-5">Harvest watch</h3>
                     <?php if ($harvestWatch): ?>
                         <div class="watch-list">
@@ -174,12 +221,42 @@ require __DIR__ . '/layout-top.php';
                         </div>
                     <?php else: ?>
                         <p class="panel-empty">
-                            No active plantings are expected to harvest in the next 30 days.
+                            No ready plantings are due within the next 20 days.
                         </p>
                     <?php endif; ?>
                     <a class="panel-link" href="<?= e(url('page=plantings')) ?>">
                         View all plantings <span aria-hidden="true">&#8594;</span>
                     </a>
+                </section>
+            </div>
+
+            <div class="column is-4">
+                <section class="box dashboard-panel status-watch">
+                    <p class="eyebrow">DATE BASED STATUS ACTIONS</p>
+                    <h3 class="title is-5">Status watch</h3>
+                    <?php if ($statusWatch): ?>
+                        <div class="watch-list">
+                            <?php foreach ($statusWatch as $planting): ?>
+                                <div class="watch-item status-watch-item">
+                                    <span class="watch-copy">
+                                        <strong>#<?= e($planting['planting_id']) ?> · <?= e($planting['crop_name'] . ' / ' . $planting['variety_name']) ?></strong>
+                                        <small><?= e($planting['farm_name']) ?> · <?= e($planting['status']) ?> · <?= e(date('M j, Y', strtotime($planting['planting_date']))) ?></small>
+                                    </span>
+                                    <form method="post">
+                                        <input type="hidden" name="csrf" value="<?= e(csrf()) ?>">
+                                        <input type="hidden" name="action" value="advance_planting">
+                                        <input type="hidden" name="planting_id" value="<?= e($planting['planting_id']) ?>">
+                                        <button class="button is-small is-primary">
+                                            Mark <?= $planting['code'] === 'planted' ? 'growing' : 'ready' ?>
+                                        </button>
+                                    </form>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else: ?>
+                        <p class="panel-empty">No plantings need a date based status update.</p>
+                    <?php endif; ?>
+                    <a class="panel-link" href="<?= e(url('page=plantings')) ?>">Manage plantings <span aria-hidden="true">&#8594;</span></a>
                 </section>
             </div>
 

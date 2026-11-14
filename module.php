@@ -27,6 +27,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = [];
 
     foreach ($module['fields'] as [$key, $label, $type, $required]) {
+        if ($type === 'computed-date') {
+            continue;
+        }
         $value = trim((string) ($_POST[$key] ?? ''));
 
         if ($required && $value === '') {
@@ -72,6 +75,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $data[$key] = $value === '' ? null : $value;
     }
 
+    if ($page === 'plantings') {
+        $plantingDate = $data['planting_date'] ?? null;
+        $varietyId = $data['variety_id'] ?? null;
+        $farmId = (int) ($data['farm_id'] ?? 0);
+        $areaPlanted = (float) ($data['area_planted'] ?? 0);
+
+        $varietyQuery = db()->prepare(
+            'SELECT growing_period_days FROM crop_variety WHERE variety_id = ?'
+        );
+        $varietyQuery->execute([$varietyId]);
+        $growingDays = $varietyQuery->fetchColumn();
+
+        if (!$growingDays || !$plantingDate) {
+            flash('danger', 'Choose a crop variety with a growing period and a planting date to calculate harvest date.');
+            go('page=' . $page . ($id ? '&edit=' . $id : ''));
+        }
+
+        $harvestDate = (new DateTimeImmutable($plantingDate))
+            ->modify('+' . (int) $growingDays . ' days')
+            ->format('Y-m-d');
+        $data['expected_harvest_date'] = $harvestDate;
+
+        $statusQuery = db()->prepare(
+            'SELECT code FROM planting_status WHERE status_id = ?'
+        );
+        $statusQuery->execute([$data['status_id'] ?? null]);
+        $statusCode = $statusQuery->fetchColumn();
+        $today = new DateTimeImmutable('today');
+        $chosenDate = new DateTimeImmutable($plantingDate);
+        $daysToHarvest = (int) $today->diff(new DateTimeImmutable($harvestDate))->format('%r%a');
+        $allowedStatuses = $chosenDate > $today
+            ? ['planted', 'cancelled']
+            : ($daysToHarvest > 20
+                ? ['planted', 'growing', 'cancelled']
+                : ['ready', 'harvested', 'cancelled']);
+
+        if (!in_array($statusCode, $allowedStatuses, true)) {
+            flash('danger', 'The selected status does not match the planting and expected harvest dates.');
+            go('page=' . $page . ($id ? '&edit=' . $id : ''));
+        }
+
+        $capacityQuery = db()->prepare(
+            "SELECT f.area_hectares,
+                    COALESCE(SUM(p.area_planted) FILTER (
+                        WHERE ps.code IN ('planted', 'growing', 'ready')
+                    ), 0) AS used_area
+             FROM farm f
+             LEFT JOIN planting p
+               ON p.farm_id = f.farm_id AND p.planting_id <> COALESCE(?, 0)
+             LEFT JOIN planting_status ps ON ps.status_id = p.status_id
+             WHERE f.farm_id = ?
+             GROUP BY f.farm_id"
+        );
+        $capacityQuery->execute([$id, $farmId]);
+        $capacity = $capacityQuery->fetch();
+
+        $capacityToReserve = in_array($statusCode, ['planted', 'growing', 'ready'], true)
+            ? $areaPlanted
+            : 0;
+        if (!$capacity || (float) $capacity['used_area'] + $capacityToReserve > (float) $capacity['area_hectares']) {
+            $available = max(0, (float) ($capacity['area_hectares'] ?? 0) - (float) ($capacity['used_area'] ?? 0));
+            flash('danger', 'The farm does not have enough remaining area. Available: ' . number_format($available, 2) . ' ha.');
+            go('page=' . $page . ($id ? '&edit=' . $id : ''));
+        }
+    }
+
+    if ($page === 'harvests' && !$id) {
+        $readyCheck = db()->prepare(
+            "SELECT 1 FROM planting p JOIN planting_status s ON s.status_id = p.status_id
+             WHERE p.planting_id = ? AND s.code = 'ready'"
+        );
+        $readyCheck->execute([$data['planting_id'] ?? null]);
+
+        if (!$readyCheck->fetchColumn()) {
+            flash('danger', 'Harvests can only be added for plantings marked ready to harvest.');
+            go('page=' . $page);
+        }
+    }
+
     db()->beginTransaction();
 
     try {
@@ -107,6 +189,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $statement->execute(array_values($data));
             $newId = (int) $statement->fetchColumn();
 
+            if ($page === 'harvests') {
+                $harvestedStatus = db()->prepare(
+                    "UPDATE planting
+                     SET status_id = (SELECT status_id FROM planting_status WHERE code = 'harvested'),
+                         updated_at = now()
+                     WHERE planting_id = ?
+                       AND status_id = (SELECT status_id FROM planting_status WHERE code = 'ready')"
+                );
+                $harvestedStatus->execute([$data['planting_id']]);
+
+                if ($harvestedStatus->rowCount() !== 1) {
+                    throw new DomainException('That planting is no longer ready for harvest.');
+                }
+                audit('UPDATE', 'planting', (int) $data['planting_id']);
+            }
+
             audit('CREATE', $table, $newId);
             flash('success', $module['title'] . ' created.');
         }
@@ -127,6 +225,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw $exception;
         }
 
+        go('page=' . $page);
+    } catch (DomainException $exception) {
+        if (db()->inTransaction()) {
+            db()->rollBack();
+        }
+        flash('danger', $exception->getMessage());
         go('page=' . $page);
     }
 
@@ -198,7 +302,7 @@ $referenceTables = [
         'from' => 'planting',
         'order' => 'planting.planting_id ASC',
     ],
-    'harvest_remark' => ['id' => 'remark_id', 'label' => 'description'],
+    'harvest_remark' => ['id' => 'remark_id', 'label' => 'description', 'order' => 'sort_order, label'],
 ];
 $lookupTables = [
     'soil_type' => ['id' => 'soil_type_id', 'label' => 'label'],
@@ -216,10 +320,21 @@ foreach ($module['fields'] as [$key, $label, $type]) {
         $referenceInfo = $referenceTables[$reference];
         $from = $referenceInfo['from'] ?? $reference;
         $order = $referenceInfo['order'] ?? 'label';
+        $filter = '';
+        if ($page === 'harvests' && $reference === 'planting') {
+            $filter = "WHERE EXISTS (
+                SELECT 1 FROM planting_status ps
+                WHERE ps.status_id = planting.status_id AND ps.code = 'ready'
+            )";
+            if ($record && !empty($record['planting_id'])) {
+                $filter .= ' OR planting.planting_id = ' . (int) $record['planting_id'];
+            }
+        }
         $references[$key] = db()->query(
             "SELECT {$referenceInfo['id']} AS id,
                     {$referenceInfo['label']} AS label
              FROM {$from}
+             {$filter}
              ORDER BY {$order}"
         )->fetchAll();
     }
@@ -227,15 +342,44 @@ foreach ($module['fields'] as [$key, $label, $type]) {
     if (str_starts_with($type, 'lookup:')) {
         $lookupName = substr($type, 7);
         $lookupInfo = $lookupTables[$lookupName];
+        $lookupOrder = $lookupInfo['order'] ?? 'sort_order, label';
         $references[$key] = db()->query(
             "SELECT {$lookupInfo['id']} AS id, {$lookupInfo['label']} AS label
              FROM {$lookupName}
-             ORDER BY sort_order, label"
+             ORDER BY {$lookupOrder}"
         )->fetchAll();
     }
 }
 
 $plantingDetails = [];
+$farmDetails = [];
+$varietyPeriods = [];
+
+if ($page === 'plantings') {
+    $farmQuery = db()->prepare(
+        "SELECT f.farm_id, f.location, f.area_hectares,
+                COALESCE(st.label, 'Not set') AS soil_type,
+                COALESCE(it.label, 'Not set') AS irrigation_type,
+                COALESCE(SUM(p.area_planted) FILTER (
+                    WHERE ps.code IN ('planted', 'growing', 'ready')
+                ), 0) AS used_area
+         FROM farm f
+         LEFT JOIN soil_type st ON st.soil_type_id = f.soil_type_id
+         LEFT JOIN irrigation_type it ON it.irrigation_type_id = f.irrigation_type_id
+         LEFT JOIN planting p ON p.farm_id = f.farm_id
+              AND p.planting_id <> COALESCE(?, 0)
+         LEFT JOIN planting_status ps ON ps.status_id = p.status_id
+         GROUP BY f.farm_id, st.label, it.label"
+    );
+    $farmQuery->execute([$record['planting_id'] ?? 0]);
+    foreach ($farmQuery->fetchAll() as $farmRow) {
+        $farmDetails[(string) $farmRow['farm_id']] = $farmRow;
+    }
+
+    $varietyPeriods = db()->query(
+        'SELECT variety_id, growing_period_days FROM crop_variety'
+    )->fetchAll(PDO::FETCH_KEY_PAIR);
+}
 
 if ($page === 'harvests') {
     $plantingRows = db()->query(
@@ -253,8 +397,34 @@ if ($page === 'harvests') {
          JOIN crop_variety variety ON variety.variety_id = planting.variety_id
          JOIN crop ON crop.crop_id = variety.crop_id
          JOIN planting_status
-           ON planting_status.status_id = planting.status_id"
+           ON planting_status.status_id = planting.status_id
+         WHERE planting_status.code = 'ready'"
     )->fetchAll();
+
+    if ($record && !empty($record['planting_id'])) {
+        $detailQuery = db()->prepare(
+            "SELECT planting.planting_id,
+                    crop.crop_name || ' / ' || variety.variety_name AS crop,
+                    farm.farm_name AS farm,
+                    to_char(planting.planting_date, 'Mon DD, YYYY') AS planted,
+                    COALESCE(to_char(planting.expected_harvest_date, 'Mon DD, YYYY'), 'Not set') AS expected,
+                    planting_status.label AS status
+             FROM planting JOIN farm ON farm.farm_id = planting.farm_id
+             JOIN crop_variety variety ON variety.variety_id = planting.variety_id
+             JOIN crop ON crop.crop_id = variety.crop_id
+             JOIN planting_status ON planting_status.status_id = planting.status_id
+             WHERE planting.planting_id = ?"
+        );
+        $detailQuery->execute([$record['planting_id']]);
+        $currentDetail = $detailQuery->fetch();
+        $alreadyListed = array_filter(
+            $plantingRows,
+            fn ($row) => (int) $row['planting_id'] === (int) $record['planting_id']
+        );
+        if ($currentDetail && !$alreadyListed) {
+            $plantingRows[] = $currentDetail;
+        }
+    }
 
     foreach ($plantingRows as $plantingRow) {
         $plantingDetails[(string) $plantingRow['planting_id']] = $plantingRow;
@@ -312,10 +482,18 @@ require __DIR__ . '/views/layout-top.php';
                                                     $details = $showPlantingDetails
                                                         ? ($plantingDetails[(string) $option['id']] ?? [])
                                                         : [];
+                                                    $period = $page === 'plantings' && $key === 'variety_id'
+                                                        ? ($varietyPeriods[$option['id']] ?? '')
+                                                        : '';
+                                                    $farmInfo = $page === 'plantings' && $key === 'farm_id'
+                                                        ? ($farmDetails[(string) $option['id']] ?? [])
+                                                        : [];
                                                     ?>
                                                     <option
                                                         value="<?= e($option['id']) ?>"
                                                         <?= (string) ($record[$key] ?? '') === (string) $option['id'] ? 'selected' : '' ?>
+                                                        <?= $page === 'plantings' && $key === 'variety_id' ? 'data-growing-days="' . e($period) . '"' : '' ?>
+                                                        <?= $page === 'plantings' && $key === 'farm_id' ? 'data-farm-location="' . e($farmInfo['location'] ?? '') . '" data-farm-area="' . e($farmInfo['area_hectares'] ?? '') . '" data-farm-used="' . e($farmInfo['used_area'] ?? '0') . '" data-farm-soil="' . e($farmInfo['soil_type'] ?? '') . '" data-farm-irrigation="' . e($farmInfo['irrigation_type'] ?? '') . '"' : '' ?>
                                                         <?php if ($showPlantingDetails): ?>
                                                             data-planting-crop="<?= e($details['crop'] ?? '') ?>"
                                                             data-planting-farm="<?= e($details['farm'] ?? '') ?>"
@@ -331,24 +509,38 @@ require __DIR__ . '/views/layout-top.php';
                                                 <?php endforeach; ?>
                                             </select>
                                         </div>
+                                        <?php if ($page === 'plantings' && $key === 'farm_id'): ?>
+                                            <div class="planting-cycle-details" data-farm-details hidden>
+                                                <p class="eyebrow">FARM AREA AND CONDITIONS</p>
+                                                <div class="field"><label class="label" for="farm_location_detail">Location</label><input class="input" id="farm_location_detail" data-farm-value="location" readonly></div>
+                                                <div class="field"><label class="label" for="farm_area_detail">Farm area (ha)</label><input class="input" id="farm_area_detail" data-farm-value="area" readonly></div>
+                                                <div class="field"><label class="label" for="farm_soil_detail">Soil type</label><input class="input" id="farm_soil_detail" data-farm-value="soil" readonly></div>
+                                                <div class="field"><label class="label" for="farm_irrigation_detail">Irrigation type</label><input class="input" id="farm_irrigation_detail" data-farm-value="irrigation" readonly></div>
+                                                <div class="field"><label class="label" for="farm_remaining_detail">Remaining area after this planting (ha)</label><input class="input" id="farm_remaining_detail" data-farm-value="remaining" readonly></div>
+                                            </div>
+                                        <?php endif; ?>
                                     <?php elseif (str_starts_with($type, 'lookup:')): ?>
                                         <div class="select is-fullwidth">
                                             <select
                                                 id="<?= e($key) ?>"
                                                 name="<?= e($key) ?>"
                                                 <?= $required ? 'required' : '' ?>
+                                                <?= $page === 'plantings' && $key === 'status_id' ? 'data-planting-status-select' : '' ?>
                                             >
                                                 <option value="">Select...</option>
                                                 <?php foreach ($references[$key] as $option): ?>
                                                     <option
                                                         value="<?= e($option['id']) ?>"
                                                         <?= (string) ($record[$key] ?? '') === (string) $option['id'] ? 'selected' : '' ?>
+                                                        <?= $page === 'plantings' && $key === 'status_id' ? 'data-status-code="' . e(db()->query('SELECT code FROM planting_status WHERE status_id = ' . (int) $option['id'])->fetchColumn()) . '"' : '' ?>
                                                     >
                                                         <?= e($option['label']) ?>
                                                     </option>
                                                 <?php endforeach; ?>
                                             </select>
                                         </div>
+                                    <?php elseif ($type === 'computed-date'): ?>
+                                        <input class="input" id="expected_harvest_date" type="date" value="<?= e($record['expected_harvest_date'] ?? '') ?>" readonly data-expected-harvest-date>
                                     <?php else: ?>
                                         <input
                                             class="input"
@@ -388,6 +580,9 @@ require __DIR__ . '/views/layout-top.php';
                                             <input class="input" id="planting_status_detail" data-planting-value="status" readonly>
                                         </div>
                                     </div>
+                                <?php endif; ?>
+                                <?php if ($page === 'plantings' && $key === 'farm_id'): ?>
+                                    <p class="help">Area in active planted, growing, and ready cycles is reserved from the farm total.</p>
                                 <?php endif; ?>
                             </div>
                         <?php endforeach; ?>

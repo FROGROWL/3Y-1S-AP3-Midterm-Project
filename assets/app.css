@@ -396,6 +396,15 @@ strong {
     color: var(--text);
 }
 
+.status-watch-item form {
+    flex: 0 0 auto;
+    margin: 0;
+}
+
+.status-watch-item .button {
+    white-space: nowrap;
+}
+
 .watch-copy {
     display: grid;
     min-width: 0;

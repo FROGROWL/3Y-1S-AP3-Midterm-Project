@@ -62,7 +62,7 @@ return [
             ['planting_date', 'Planting date', 'date', true],
             ['area_planted', 'Area planted (ha)', 'number', true],
             ['seed_quantity', 'Seed quantity (kg)', 'number', false],
-            ['expected_harvest_date', 'Expected harvest', 'date', false],
+            ['expected_harvest_date', 'Expected harvest date (calculated)', 'computed-date', false],
             ['status_id', 'Status', 'lookup:planting_status', true],
         ],
     ],
@@ -72,7 +72,7 @@ return [
         'pk' => 'harvest_id',
         'search' => [],
         'fields' => [
-            ['planting_id', 'Planting cycle', 'ref:planting', true],
+            ['planting_id', 'Planting ID', 'ref:planting', true],
             ['harvest_date', 'Harvest date', 'date', true],
             ['quantity_kg', 'Quantity (kg)', 'number', true],
             ['selling_price_per_kg', 'Selling price/kg', 'number', false],
