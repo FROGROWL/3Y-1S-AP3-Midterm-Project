@@ -44,7 +44,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $roleId,
     ]);
 
-    audit('CREATE', 'app_user', (int) db()->lastInsertId());
+    $createdUserId = (int) db()->lastInsertId();
+    $roleLabel = db()->prepare('SELECT label FROM user_role WHERE role_id = ?');
+    $roleLabel->execute([$roleId]);
+    audit('CREATE', 'app_user', $createdUserId, [
+        'after' => [
+            'full_name' => $name,
+            'email' => $email,
+            'role' => $roleLabel->fetchColumn(),
+        ],
+    ]);
     flash('success', 'User account created.');
     go('page=users');
 }

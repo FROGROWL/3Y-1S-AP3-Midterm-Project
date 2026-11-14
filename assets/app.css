@@ -775,6 +775,14 @@ strong {
     cursor: default;
 }
 
+.audit-details {
+    max-width: 42rem;
+    max-height: 22rem;
+    overflow: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
 @media screen and (max-width: 1215px) {
     .module-layout {
         display: block;

@@ -1,4 +1,9 @@
 <?php
+if ((user()['role'] ?? '') === 'Administrator') {
+    require __DIR__ . '/admin-dashboard.php';
+    exit;
+}
+
 $layoutTitle = 'Overview';
 $pdo = db();
 
@@ -24,7 +29,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'advan
     $advance->execute([$plantingId]);
     $advancedId = $advance->fetchColumn();
     if ($advancedId) {
-        audit('UPDATE', 'planting', (int) $advancedId);
+        $statusLookup = $pdo->prepare(
+            'SELECT status.code FROM planting JOIN planting_status status USING (status_id)
+             WHERE planting.planting_id = ?'
+        );
+        $statusLookup->execute([(int) $advancedId]);
+        $afterStatus = $statusLookup->fetchColumn();
+        audit('UPDATE', 'planting', (int) $advancedId, [
+            'status' => [
+                'before' => $afterStatus === 'growing' ? 'planted' : 'growing',
+                'after' => $afterStatus,
+            ],
+        ]);
         flash('success', 'Planting #' . (int) $advancedId . ' status updated.');
     } else {
         flash('danger', 'This planting no longer meets the date rule for a status update.');
@@ -36,7 +52,6 @@ $stats = [];
 $tables = [
     'farmers' => 'farmer',
     'farms' => 'farm',
-    'crops' => 'crop',
     'harvests' => 'harvest',
 ];
 
@@ -260,31 +275,6 @@ require __DIR__ . '/layout-top.php';
                 </section>
             </div>
 
-            <div class="column is-4">
-                <section class="box dashboard-panel quick-box">
-                    <p class="eyebrow">SHORTCUTS</p>
-                    <h3 class="title is-5">Common tasks</h3>
-                    <?php
-                    $quickLinks = [
-                        ['farmers', 'Register a farmer'],
-                        ['farms', 'Add a farm'],
-                        ['plantings', 'Record a planting'],
-                        ['harvests', 'Log a harvest'],
-                    ];
-                    ?>
-                    <div class="quick-actions-grid">
-                        <?php foreach ($quickLinks as [$target, $label]): ?>
-                            <a class="quick-action" href="<?= e(url('page=' . $target)) ?>">
-                                <span><?= e($label) ?></span>
-                                <span aria-hidden="true">+</span>
-                            </a>
-                        <?php endforeach; ?>
-                    </div>
-                    <a class="panel-link" href="<?= e(url('page=reports')) ?>">
-                        Open reports <span aria-hidden="true">&#8594;</span>
-                    </a>
-                </section>
-            </div>
         </div>
 
         <section class="box table-card recent-harvest-panel">

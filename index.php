@@ -54,12 +54,18 @@ try {
 
     require_login();
 
+    if (in_array($page, ['crops', 'varieties', 'users', 'audit'], true)) {
+        require_admin();
+    }
+
     if ($page === 'dashboard') {
         require __DIR__ . '/views/dashboard.php';
     } elseif ($page === 'reports') {
         require __DIR__ . '/views/reports.php';
     } elseif ($page === 'users') {
         require __DIR__ . '/views/users.php';
+    } elseif ($page === 'audit') {
+        require __DIR__ . '/views/audit.php';
     } elseif (array_key_exists($page, require __DIR__ . '/modules.php')) {
         require __DIR__ . '/module.php';
     } else {

@@ -62,7 +62,14 @@ unset($_SESSION['flash']);
                 <div class="navbar-start">
                     <a class="navbar-item" href="<?= e(url()) ?>">Overview</a>
                     <?php
-                    $navigation = [
+                    $staffNavigation = [
+                        'farmers' => 'Farmers',
+                        'farms' => 'Farms',
+                        'plantings' => 'Plantings',
+                        'harvests' => 'Harvests',
+                        'reports' => 'Reports',
+                    ];
+                    $adminNavigation = [
                         'farmers' => 'Farmers',
                         'farms' => 'Farms',
                         'crops' => 'Crop types',
@@ -70,16 +77,18 @@ unset($_SESSION['flash']);
                         'plantings' => 'Plantings',
                         'harvests' => 'Harvests',
                         'reports' => 'Reports',
+                        'users' => 'Users',
+                        'audit' => 'Audit logs',
                     ];
+                    $navigation = ($currentUser['role'] ?? '') === 'Administrator'
+                        ? $adminNavigation
+                        : $staffNavigation;
                     ?>
                     <?php foreach ($navigation as $pageKey => $label): ?>
                         <a class="navbar-item" href="<?= e(url('page=' . $pageKey)) ?>">
                             <?= e($label) ?>
                         </a>
                     <?php endforeach; ?>
-                    <?php if (($currentUser['role'] ?? null) === 'Administrator'): ?>
-                        <a class="navbar-item" href="<?= e(url('page=users')) ?>">Users</a>
-                    <?php endif; ?>
                 </div>
 
                 <div class="navbar-end">

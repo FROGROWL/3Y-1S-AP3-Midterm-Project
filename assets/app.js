@@ -101,8 +101,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const farmSelect = document.querySelector('#farm_id');
     const farmDetails = document.querySelector('[data-farm-details]');
-    const areaInput = document.querySelector('#area_planted');
+    const areaInput = document.querySelector('.planting-area-input');
     const plantingStatusForArea = document.querySelector('[data-planting-status-select]');
+    const areaError = document.querySelector('[data-area-error]');
     if (farmSelect && farmDetails) {
         const farmFields = farmDetails.querySelectorAll('[data-farm-value]');
         const updateFarmDetails = () => {
@@ -110,6 +111,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!option?.value) {
                 farmDetails.hidden = true;
                 farmFields.forEach((field) => { field.value = ''; });
+                areaInput?.setCustomValidity('');
+                areaInput?.classList.remove('is-danger');
+                if (areaError) {
+                    areaError.textContent = '';
+                    areaError.hidden = true;
+                }
                 return;
             }
             const total = Number(option.dataset.farmArea || 0);
@@ -118,14 +125,29 @@ document.addEventListener('DOMContentLoaded', () => {
             const reservedArea = ['planted', 'growing', 'ready'].includes(statusCode)
                 ? Number(areaInput?.value || 0)
                 : 0;
+            const remaining = Math.max(0, total - used);
             const values = {
                 location: option.dataset.farmLocation || '',
                 area: total.toFixed(2),
                 soil: option.dataset.farmSoil || '',
                 irrigation: option.dataset.farmIrrigation || '',
-                remaining: Math.max(0, total - used - reservedArea).toFixed(2),
+                remaining: Math.max(0, remaining - reservedArea).toFixed(2),
             };
             farmFields.forEach((field) => { field.value = values[field.dataset.farmValue] || ''; });
+            const overArea = Number(areaInput?.value || 0) > remaining;
+            if (areaInput) {
+                const message = overArea
+                    ? `Area planted exceeds the ${remaining.toFixed(2)} ha remaining on this farm.`
+                    : '';
+                areaInput.setCustomValidity(message);
+                areaInput.classList.toggle('is-danger', overArea);
+            }
+            if (areaError) {
+                areaError.textContent = overArea
+                    ? `Area planted exceeds the ${remaining.toFixed(2)} ha remaining on this farm.`
+                    : '';
+                areaError.hidden = !overArea;
+            }
             farmDetails.hidden = false;
         };
         farmSelect.addEventListener('change', updateFarmDetails);
@@ -135,6 +157,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const varietySelect = document.querySelector('#variety_id');
+    const varietyDetails = document.querySelector('[data-variety-details]');
+    if (varietySelect && varietyDetails) {
+        const varietyFields = varietyDetails.querySelectorAll('[data-variety-value]');
+        const updateVarietyDetails = () => {
+            const option = varietySelect.selectedOptions[0];
+            if (!option?.value) {
+                varietyDetails.hidden = true;
+                varietyFields.forEach((field) => { field.value = ''; });
+                return;
+            }
+            const values = {
+                period: option.dataset.growingDays
+                    ? `${option.dataset.growingDays} days`
+                    : 'Not specified',
+                season: option.dataset.growingSeason || 'Not specified',
+            };
+            varietyFields.forEach((field) => {
+                field.value = values[field.dataset.varietyValue] || '';
+            });
+            varietyDetails.hidden = false;
+        };
+        varietySelect.addEventListener('change', updateVarietyDetails);
+        updateVarietyDetails();
+    }
+
     const plantingDate = document.querySelector('#planting_date');
     const expectedDate = document.querySelector('[data-expected-harvest-date]');
     const statusSelect = document.querySelector('[data-planting-status-select]');

@@ -13,10 +13,13 @@ if (isset($_GET['delete'])) {
 
     check_csrf();
     $id = (int) ($_POST['id'] ?? 0);
+    $beforeQuery = db()->prepare("SELECT * FROM \"{$table}\" WHERE \"{$primaryKey}\" = ?");
+    $beforeQuery->execute([$id]);
+    $before = $beforeQuery->fetch() ?: null;
     $statement = db()->prepare("DELETE FROM \"{$table}\" WHERE \"{$primaryKey}\" = ?");
     $statement->execute([$id]);
 
-    audit('DELETE', $table, $id);
+    audit('DELETE', $table, $id, ['before' => $before]);
     flash('success', $module['title'] . ' record deleted.');
     go('page=' . $page);
 }
@@ -134,9 +137,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $capacityToReserve = in_array($statusCode, ['planted', 'growing', 'ready'], true)
             ? $areaPlanted
             : 0;
-        if (!$capacity || (float) $capacity['used_area'] + $capacityToReserve > (float) $capacity['area_hectares']) {
-            $available = max(0, (float) ($capacity['area_hectares'] ?? 0) - (float) ($capacity['used_area'] ?? 0));
-            flash('danger', 'The farm does not have enough remaining area. Available: ' . number_format($available, 2) . ' ha.');
+        $availableArea = max(
+            0,
+            (float) ($capacity['area_hectares'] ?? 0) - (float) ($capacity['used_area'] ?? 0)
+        );
+        if (
+            !$capacity
+            || $areaPlanted > $availableArea
+            || (float) $capacity['used_area'] + $capacityToReserve > (float) $capacity['area_hectares']
+        ) {
+            flash('danger', 'Area planted exceeds the remaining farm area. Available: ' . number_format($availableArea, 2) . ' ha.');
             go('page=' . $page . ($id ? '&edit=' . $id : ''));
         }
     }
@@ -158,6 +168,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
         if ($id) {
+            $beforeQuery = db()->prepare(
+                "SELECT * FROM \"{$table}\" WHERE \"{$primaryKey}\" = ?"
+            );
+            $beforeQuery->execute([$id]);
+            $before = $beforeQuery->fetch() ?: null;
             $assignments = implode(
                 ', ',
                 array_map(fn ($column) => '"' . $column . '" = ?', array_keys($data))
@@ -172,7 +187,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $statement->execute($values);
 
-            audit('UPDATE', $table, $id);
+            $afterQuery = db()->prepare(
+                "SELECT * FROM \"{$table}\" WHERE \"{$primaryKey}\" = ?"
+            );
+            $afterQuery->execute([$id]);
+            audit('UPDATE', $table, $id, [
+                'before' => $before,
+                'after' => $afterQuery->fetch() ?: $data,
+            ]);
             flash('success', $module['title'] . ' updated.');
         } else {
             $columns = implode(
@@ -188,6 +210,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $statement->execute(array_values($data));
             $newId = (int) $statement->fetchColumn();
+            $afterQuery = db()->prepare(
+                "SELECT * FROM \"{$table}\" WHERE \"{$primaryKey}\" = ?"
+            );
+            $afterQuery->execute([$newId]);
+            $createdRecord = $afterQuery->fetch() ?: $data;
 
             if ($page === 'harvests') {
                 $harvestedStatus = db()->prepare(
@@ -202,10 +229,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($harvestedStatus->rowCount() !== 1) {
                     throw new DomainException('That planting is no longer ready for harvest.');
                 }
-                audit('UPDATE', 'planting', (int) $data['planting_id']);
+                audit('UPDATE', 'planting', (int) $data['planting_id'], [
+                    'status' => ['before' => 'ready', 'after' => 'harvested'],
+                ]);
             }
 
-            audit('CREATE', $table, $newId);
+            audit('CREATE', $table, $newId, ['after' => $createdRecord]);
             flash('success', $module['title'] . ' created.');
         }
 
@@ -376,9 +405,16 @@ if ($page === 'plantings') {
         $farmDetails[(string) $farmRow['farm_id']] = $farmRow;
     }
 
-    $varietyPeriods = db()->query(
-        'SELECT variety_id, growing_period_days FROM crop_variety'
-    )->fetchAll(PDO::FETCH_KEY_PAIR);
+    $varietyRows = db()->query(
+        'SELECT variety.variety_id, variety.growing_period_days,
+                COALESCE(season.label, \'Not specified\') AS growing_season
+         FROM crop_variety variety
+         LEFT JOIN growing_season season
+           ON season.growing_season_id = variety.growing_season_id'
+    )->fetchAll();
+    foreach ($varietyRows as $varietyRow) {
+        $varietyPeriods[(string) $varietyRow['variety_id']] = $varietyRow;
+    }
 }
 
 if ($page === 'harvests') {
@@ -483,7 +519,10 @@ require __DIR__ . '/views/layout-top.php';
                                                         ? ($plantingDetails[(string) $option['id']] ?? [])
                                                         : [];
                                                     $period = $page === 'plantings' && $key === 'variety_id'
-                                                        ? ($varietyPeriods[$option['id']] ?? '')
+                                                        ? ($varietyPeriods[(string) $option['id']]['growing_period_days'] ?? '')
+                                                        : '';
+                                                    $varietySeason = $page === 'plantings' && $key === 'variety_id'
+                                                        ? ($varietyPeriods[(string) $option['id']]['growing_season'] ?? 'Not specified')
                                                         : '';
                                                     $farmInfo = $page === 'plantings' && $key === 'farm_id'
                                                         ? ($farmDetails[(string) $option['id']] ?? [])
@@ -493,6 +532,7 @@ require __DIR__ . '/views/layout-top.php';
                                                         value="<?= e($option['id']) ?>"
                                                         <?= (string) ($record[$key] ?? '') === (string) $option['id'] ? 'selected' : '' ?>
                                                         <?= $page === 'plantings' && $key === 'variety_id' ? 'data-growing-days="' . e($period) . '"' : '' ?>
+                                                        <?= $page === 'plantings' && $key === 'variety_id' ? 'data-growing-season="' . e($varietySeason) . '"' : '' ?>
                                                         <?= $page === 'plantings' && $key === 'farm_id' ? 'data-farm-location="' . e($farmInfo['location'] ?? '') . '" data-farm-area="' . e($farmInfo['area_hectares'] ?? '') . '" data-farm-used="' . e($farmInfo['used_area'] ?? '0') . '" data-farm-soil="' . e($farmInfo['soil_type'] ?? '') . '" data-farm-irrigation="' . e($farmInfo['irrigation_type'] ?? '') . '"' : '' ?>
                                                         <?php if ($showPlantingDetails): ?>
                                                             data-planting-crop="<?= e($details['crop'] ?? '') ?>"
@@ -516,7 +556,14 @@ require __DIR__ . '/views/layout-top.php';
                                                 <div class="field"><label class="label" for="farm_area_detail">Farm area (ha)</label><input class="input" id="farm_area_detail" data-farm-value="area" readonly></div>
                                                 <div class="field"><label class="label" for="farm_soil_detail">Soil type</label><input class="input" id="farm_soil_detail" data-farm-value="soil" readonly></div>
                                                 <div class="field"><label class="label" for="farm_irrigation_detail">Irrigation type</label><input class="input" id="farm_irrigation_detail" data-farm-value="irrigation" readonly></div>
-                                                <div class="field"><label class="label" for="farm_remaining_detail">Remaining area after this planting (ha)</label><input class="input" id="farm_remaining_detail" data-farm-value="remaining" readonly></div>
+                                                <div class="field"><label class="label" for="farm_remaining_detail">Remaining area</label><input class="input" id="farm_remaining_detail" data-farm-value="remaining" readonly></div>
+                                            </div>
+                                        <?php endif; ?>
+                                        <?php if ($page === 'plantings' && $key === 'variety_id'): ?>
+                                            <div class="planting-cycle-details" data-variety-details hidden>
+                                                <p class="eyebrow">VARIETY GROWING INFORMATION</p>
+                                                <div class="field"><label class="label" for="variety_period_detail">Growing period (days)</label><input class="input" id="variety_period_detail" data-variety-value="period" readonly></div>
+                                                <div class="field"><label class="label" for="variety_season_detail">Best growing season</label><input class="input" id="variety_season_detail" data-variety-value="season" readonly></div>
                                             </div>
                                         <?php endif; ?>
                                     <?php elseif (str_starts_with($type, 'lookup:')): ?>
@@ -543,7 +590,7 @@ require __DIR__ . '/views/layout-top.php';
                                         <input class="input" id="expected_harvest_date" type="date" value="<?= e($record['expected_harvest_date'] ?? '') ?>" readonly data-expected-harvest-date>
                                     <?php else: ?>
                                         <input
-                                            class="input"
+                                            class="input <?= $page === 'plantings' && $key === 'area_planted' ? 'planting-area-input' : '' ?>"
                                             id="<?= e($key) ?>"
                                             name="<?= e($key) ?>"
                                             type="<?= e($type === 'number' ? 'number' : $type) ?>"
@@ -551,6 +598,9 @@ require __DIR__ . '/views/layout-top.php';
                                             value="<?= e($record[$key] ?? '') ?>"
                                             <?= $required ? 'required' : '' ?>
                                         >
+                                        <?php if ($page === 'plantings' && $key === 'area_planted'): ?>
+                                            <p class="help is-danger" data-area-error hidden></p>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 </div>
                                 <?php if ($page === 'harvests' && $key === 'planting_id'): ?>

@@ -17,7 +17,7 @@
 | `harvest_remark` | `remark_id`, code, description | Controlled harvest remarks. |
 | `app_user` | `user_id`, `role_id`, name, unique email, password hash, active flag | Administrator and Staff authentication. Password uses PHP `password_hash`. |
 | `user_role` | `role_id`, code, label | Controlled roles used by application accounts. |
-| `audit_log` | `audit_id`, `user_id`, `action_id`, `entity_type_id`, entity record ID, timestamp | Records create/update/delete events. The entity record ID is polymorphic and paired with its entity type. |
+| `audit_log` | `audit_id`, `user_id`, `action_id`, `entity_type_id`, entity record ID, timestamp, `details` JSONB | Records create/update/delete events with before/after values where available. The entity record ID is polymorphic and paired with its entity type. |
 | `audit_action` | `action_id`, code, label | Controlled audit actions. |
 | `audit_entity` | `entity_type_id`, code, label | Controlled audited table/entity types. |
 

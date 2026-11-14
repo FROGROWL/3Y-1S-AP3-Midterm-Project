@@ -159,13 +159,22 @@ function require_admin(): void
     }
 }
 
-function audit(string $action, string $entity, ?int $id = null): void
+function audit(string $action, string $entity, ?int $id = null, ?array $details = null): void
 {
     $statement = db()->prepare(
-        'INSERT INTO audit_log (user_id, action_id, entity_type_id, entity_record_id)
-         SELECT ?, action.action_id, entity.entity_type_id, ?
+        'INSERT INTO audit_log (user_id, action_id, entity_type_id, entity_record_id, details)
+         SELECT ?, action.action_id, entity.entity_type_id, ?, ?::jsonb
          FROM audit_action action, audit_entity entity
          WHERE action.code = ? AND entity.code = ?'
     );
-    $statement->execute([user()['user_id'] ?? null, $id, strtoupper($action), strtolower($entity)]);
+    $jsonDetails = $details === null
+        ? null
+        : json_encode($details, JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE);
+    $statement->execute([
+        user()['user_id'] ?? null,
+        $id,
+        $jsonDetails,
+        strtoupper($action),
+        strtolower($entity),
+    ]);
 }

@@ -169,6 +169,9 @@ CREATE TABLE IF NOT EXISTS audit_log (
     occurred_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+ALTER TABLE audit_log
+    ADD COLUMN IF NOT EXISTS details JSONB;
+
 CREATE INDEX IF NOT EXISTS ix_farm_farmer ON farm (farmer_id);
 CREATE INDEX IF NOT EXISTS ix_planting_farm ON planting (farm_id);
 CREATE INDEX IF NOT EXISTS ix_planting_variety ON planting (variety_id);

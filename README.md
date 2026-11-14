@@ -68,7 +68,7 @@ With Apache running in XAMPP, open this address in your browser:
 http://localhost/Midterm%20Project/agri-info-system/
 ```
 
-Sign in with the administrator email and password configured in step 3. Use **Users** to add Staff or additional Administrator accounts.
+Sign in with the administrator email and password configured in step 3. Use **Users** to add Staff or additional Administrator accounts. Administrators can manage crop types, varieties, users, and audit logs. Staff see the operational dashboard and navigation for farmers, farms, plantings, harvests, and reports.
 
 ### Alternative: run PHP?s local server
 
@@ -105,7 +105,7 @@ This application runs on PHP and Apache, so deploy it as a **Docker Web Service*
 
 5. Create the service and wait for the first deploy to finish. Open its `onrender.com` URL and sign in using the administrator account already installed in Supabase.
 
-For an existing Supabase database, run `install.php` locally once after backing up the database so it can apply the schema migration. After that, routine Render code deploys do not need to run the installer.
+For an existing Supabase database, back it up, then run `install.php` locally once so it can add the audit detail column and apply any pending schema changes. The sample data script is repeatable and retains existing records. After that, routine Render code deploys do not need to run the installer.
 
 ## Connect pgAdmin 4
 
