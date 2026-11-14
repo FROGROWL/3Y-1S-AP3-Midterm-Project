@@ -162,7 +162,10 @@ function require_admin(): void
 function audit(string $action, string $entity, ?int $id = null): void
 {
     $statement = db()->prepare(
-        'INSERT INTO audit_log (user_id, action, entity, entity_id) VALUES (?, ?, ?, ?)'
+        'INSERT INTO audit_log (user_id, action_id, entity_type_id, entity_record_id)
+         SELECT ?, action.action_id, entity.entity_type_id, ?
+         FROM audit_action action, audit_entity entity
+         WHERE action.code = ? AND entity.code = ?'
     );
-    $statement->execute([user()['user_id'] ?? null, $action, $entity, $id]);
+    $statement->execute([user()['user_id'] ?? null, $id, strtoupper($action), strtolower($entity)]);
 }

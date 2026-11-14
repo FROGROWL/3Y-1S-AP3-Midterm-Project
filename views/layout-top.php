@@ -56,7 +56,8 @@ unset($_SESSION['flash']);
                     $navigation = [
                         'farmers' => 'Farmers',
                         'farms' => 'Farms',
-                        'crops' => 'Crops',
+                        'crops' => 'Crop types',
+                        'varieties' => 'Varieties',
                         'plantings' => 'Plantings',
                         'harvests' => 'Harvests',
                         'reports' => 'Reports',

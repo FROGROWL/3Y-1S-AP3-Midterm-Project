@@ -1,6 +1,9 @@
 <?php
 require_admin();
 $layoutTitle = 'Users';
+$roles = db()->query(
+    'SELECT role_id, label FROM user_role ORDER BY sort_order, label'
+)->fetchAll();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     check_csrf();
@@ -8,8 +11,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['full_name'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $password = (string) ($_POST['password'] ?? '');
-    $role = $_POST['role'] ?? 'Staff';
-    $validRole = in_array($role, ['Administrator', 'Staff'], true);
+    $roleId = filter_var($_POST['role_id'] ?? null, FILTER_VALIDATE_INT);
+    $validRole = false;
+
+    if ($roleId !== false && $roleId !== null) {
+        $roleCheck = db()->prepare('SELECT 1 FROM user_role WHERE role_id = ?');
+        $roleCheck->execute([$roleId]);
+        $validRole = (bool) $roleCheck->fetchColumn();
+    }
 
     if (
         $name === ''
@@ -25,14 +34,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $statement = db()->prepare(
-        'INSERT INTO app_user (full_name, email, password_hash, role)
+        'INSERT INTO app_user (full_name, email, password_hash, role_id)
          VALUES (?, ?, ?, ?)'
     );
     $statement->execute([
         $name,
         $email,
         password_hash($password, PASSWORD_DEFAULT),
-        $role,
+        $roleId,
     ]);
 
     audit('CREATE', 'app_user', (int) db()->lastInsertId());
@@ -41,9 +50,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $users = db()->query(
-    'SELECT user_id, full_name, email, role, is_active, created_at
+    'SELECT app_user.user_id, app_user.full_name, app_user.email,
+            user_role.label AS role, app_user.is_active, app_user.created_at
      FROM app_user
-     ORDER BY user_id'
+     JOIN user_role ON user_role.role_id = app_user.role_id
+     ORDER BY app_user.user_id'
 )->fetchAll();
 
 require __DIR__ . '/layout-top.php';
@@ -84,9 +95,15 @@ require __DIR__ . '/layout-top.php';
                         <div class="field">
                             <label class="label" for="role">Role</label>
                             <div class="select">
-                                <select id="role" name="role">
-                                    <option>Staff</option>
-                                    <option>Administrator</option>
+                                <select id="role" name="role_id" required>
+                                    <?php foreach ($roles as $role): ?>
+                                        <option
+                                            value="<?= e($role['role_id']) ?>"
+                                            <?= $role['label'] === 'Staff' ? 'selected' : '' ?>
+                                        >
+                                            <?= e($role['label']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
                         </div>

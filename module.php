@@ -34,6 +34,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             go('page=' . $page . ($id ? '&edit=' . $id : ''));
         }
 
+        if (
+            $value !== ''
+            && (str_starts_with($type, 'ref:') || str_starts_with($type, 'lookup:'))
+            && (!ctype_digit($value) || (int) $value < 1)
+        ) {
+            flash('danger', "Select a valid {$label}.");
+            go('page=' . $page . ($id ? '&edit=' . $id : ''));
+        }
+
         if ($value !== '' && $type === 'number') {
             $isPositiveField = in_array(
                 $key,
@@ -178,28 +187,44 @@ $referenceTables = [
     'farmer' => ['id' => 'farmer_id', 'label' => "first_name || ' ' || last_name"],
     'farm' => ['id' => 'farm_id', 'label' => 'farm_name'],
     'crop' => ['id' => 'crop_id', 'label' => 'crop_name'],
+    'crop_variety' => [
+        'id' => 'variety.variety_id',
+        'label' => "crop.crop_name || ' / ' || variety.variety_name",
+        'from' => 'crop_variety variety JOIN crop ON crop.crop_id = variety.crop_id',
+    ],
     'planting' => ['id' => 'planting_id', 'label' => "'Planting #' || planting_id"],
     'harvest_remark' => ['id' => 'remark_id', 'label' => 'description'],
 ];
+$lookupTables = [
+    'soil_type' => ['id' => 'soil_type_id', 'label' => 'label'],
+    'irrigation_type' => ['id' => 'irrigation_type_id', 'label' => 'label'],
+    'crop_category' => ['id' => 'crop_category_id', 'label' => 'label'],
+    'growing_season' => ['id' => 'growing_season_id', 'label' => 'label'],
+    'quality_grade' => ['id' => 'quality_grade_id', 'label' => 'label'],
+    'planting_status' => ['id' => 'status_id', 'label' => 'label'],
+];
 $references = [];
-$lookups = [];
 
 foreach ($module['fields'] as [$key, $label, $type]) {
     if (str_starts_with($type, 'ref:')) {
         $reference = substr($type, 4);
         $referenceInfo = $referenceTables[$reference];
+        $from = $referenceInfo['from'] ?? $reference;
         $references[$key] = db()->query(
             "SELECT {$referenceInfo['id']} AS id,
                     {$referenceInfo['label']} AS label
-             FROM {$reference}
+             FROM {$from}
              ORDER BY label"
         )->fetchAll();
     }
 
-    if (str_starts_with($type, 'select:')) {
-        $lookup = substr($type, 7);
-        $lookups[$key] = db()->query(
-            "SELECT code, label FROM {$lookup} ORDER BY sort_order, label"
+    if (str_starts_with($type, 'lookup:')) {
+        $lookupName = substr($type, 7);
+        $lookupInfo = $lookupTables[$lookupName];
+        $references[$key] = db()->query(
+            "SELECT {$lookupInfo['id']} AS id, {$lookupInfo['label']} AS label
+             FROM {$lookupName}
+             ORDER BY sort_order, label"
         )->fetchAll();
     }
 }
@@ -222,7 +247,7 @@ require __DIR__ . '/views/layout-top.php';
                 <div class="box form-card">
                     <h2 class="title is-5">
                         <?= $record ? 'Edit' : 'Add' ?>
-                        <?= e(rtrim($module['title'], 's')) ?>
+                        <?= e($module['singular'] ?? rtrim($module['title'], 's')) ?>
                     </h2>
 
                     <form method="post">
@@ -257,7 +282,7 @@ require __DIR__ . '/views/layout-top.php';
                                                 <?php endforeach; ?>
                                             </select>
                                         </div>
-                                    <?php elseif (str_starts_with($type, 'select:')): ?>
+                                    <?php elseif (str_starts_with($type, 'lookup:')): ?>
                                         <div class="select is-fullwidth">
                                             <select
                                                 id="<?= e($key) ?>"
@@ -265,10 +290,10 @@ require __DIR__ . '/views/layout-top.php';
                                                 <?= $required ? 'required' : '' ?>
                                             >
                                                 <option value="">Select...</option>
-                                                <?php foreach ($lookups[$key] as $option): ?>
+                                                <?php foreach ($references[$key] as $option): ?>
                                                     <option
-                                                        value="<?= e($option['code']) ?>"
-                                                        <?= (string) ($record[$key] ?? '') === $option['code'] ? 'selected' : '' ?>
+                                                        value="<?= e($option['id']) ?>"
+                                                        <?= (string) ($record[$key] ?? '') === (string) $option['id'] ? 'selected' : '' ?>
                                                     >
                                                         <?= e($option['label']) ?>
                                                     </option>
@@ -375,9 +400,9 @@ require __DIR__ . '/views/layout-top.php';
                                                     $option = reset($options);
                                                     ?>
                                                     <?= e($option['label'] ?? 'N/A') ?>
-                                                <?php elseif (str_starts_with($type, 'select:')): ?>
+                                                <?php elseif (str_starts_with($type, 'lookup:')): ?>
                                                     <?php
-                                                    $options = array_column($lookups[$key], 'label', 'code');
+                                                    $options = array_column($references[$key], 'label', 'id');
                                                     ?>
                                                     <?= e($options[$row[$key]] ?? 'N/A') ?>
                                                 <?php else: ?>

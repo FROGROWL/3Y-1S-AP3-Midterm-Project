@@ -54,7 +54,7 @@ Set-Location "C:\xampp\htdocs\Midterm Project\agri-info-system"
 C:\xampp\php\php.exe install.php
 ```
 
-The installer applies `sql/schema.sql`, `sql/lookup_data.sql`, and `sql/sample_data.sql`, then creates the administrator account. The demo seed includes 15 farmers, 15 farms, 10 crops, 50 plantings, and 20 harvests. It does not truncate existing application records.
+Before applying an update to a database that already contains records, create a Supabase backup. For an earlier installation, the installer detects the old schema and applies `sql/migrations/001_integer_lookup_normalization.sql` in a transaction. It moves category text into lookup rows, creates crop-variety records, and remaps existing planting, harvest, user, and audit references to integer IDs. Then it applies `sql/schema.sql`, `sql/lookup_data.sql`, and `sql/sample_data.sql`. The demo seed includes 15 farmers, 15 farms, 10 crop types and varieties, 50 plantings, and 20 harvests; it does not truncate existing application records.
 
 After installation, remove or blank the `INSTALL_ADMIN_EMAIL` and `INSTALL_ADMIN_PASSWORD` lines in `.env`. Keep the administrator password somewhere safe.
 
@@ -103,7 +103,7 @@ This application runs on PHP and Apache, so deploy it as a **Docker Web Service*
 
 5. Create the service and wait for the first deploy to finish. Open its `onrender.com` URL and sign in using the administrator account already installed in Supabase.
 
-The app uses the existing Supabase database; do not run `install.php` again unless you intend to initialize another database.
+For an existing Supabase database, run `install.php` locally once after backing up the database so it can apply the schema migration. After that, routine Render code deploys do not need to run the installer.
 
 ## Connect pgAdmin 4
 

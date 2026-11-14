@@ -18,10 +18,13 @@ $totalHarvest = (float) $pdo
     ->query('SELECT COALESCE(SUM(quantity_kg), 0) FROM harvest')
     ->fetchColumn();
 $recentHarvests = $pdo->query(
-    'SELECT h.harvest_date, h.quantity_kg, c.crop_name, f.farm_name
+    'SELECT h.harvest_date, h.quantity_kg,
+            c.crop_name || \' / \' || v.variety_name AS crop_display,
+            f.farm_name
      FROM harvest h
      JOIN planting p ON p.planting_id = h.planting_id
-     JOIN crop c ON c.crop_id = p.crop_id
+     JOIN crop_variety v ON v.variety_id = p.variety_id
+     JOIN crop c ON c.crop_id = v.crop_id
      JOIN farm f ON f.farm_id = p.farm_id
      ORDER BY h.harvest_date DESC, h.harvest_id DESC
      LIMIT 6'
@@ -92,7 +95,7 @@ require __DIR__ . '/layout-top.php';
                                 <?php foreach ($recentHarvests as $harvest): ?>
                                     <tr>
                                         <td><?= e($harvest['harvest_date']) ?></td>
-                                        <td><?= e($harvest['crop_name']) ?></td>
+                                        <td><?= e($harvest['crop_display']) ?></td>
                                         <td><?= e($harvest['farm_name']) ?></td>
                                         <td><?= number_format((float) $harvest['quantity_kg'], 2) ?> kg</td>
                                     </tr>

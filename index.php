@@ -10,9 +10,11 @@ try {
         check_csrf();
 
         $statement = db()->prepare(
-            'SELECT user_id, full_name, email, password_hash, role, is_active
+            'SELECT app_user.user_id, app_user.full_name, app_user.email,
+                    app_user.password_hash, user_role.label AS role, app_user.is_active
              FROM app_user
-             WHERE lower(email) = lower(?)'
+             JOIN user_role ON user_role.role_id = app_user.role_id
+             WHERE lower(app_user.email) = lower(?)'
         );
         $statement->execute([trim($_POST['email'] ?? '')]);
         $account = $statement->fetch();

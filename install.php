@@ -10,6 +10,28 @@ if (PHP_SAPI !== 'cli') {
 
 try {
     $pdo = db();
+    $legacySchema = (bool) $pdo->query(
+        "SELECT EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = current_schema()
+              AND table_name = 'crop'
+              AND column_name = 'variety'
+        )"
+    )->fetchColumn();
+
+    if ($legacySchema) {
+        $migration = file_get_contents(
+            __DIR__ . '/sql/migrations/001_integer_lookup_normalization.sql'
+        );
+
+        if ($migration === false) {
+            throw new RuntimeException('Missing integer lookup migration.');
+        }
+
+        $pdo->exec($migration);
+        echo "Applied 001_integer_lookup_normalization.sql\n";
+    }
+
     $sqlFiles = ['schema.sql', 'lookup_data.sql', 'sample_data.sql'];
 
     foreach ($sqlFiles as $file) {
@@ -36,15 +58,15 @@ try {
         }
 
         $statement = $pdo->prepare(
-            'INSERT INTO app_user (full_name, email, password_hash, role)
-             VALUES (?, ?, ?, ?)
+            'INSERT INTO app_user (full_name, email, password_hash, role_id)
+             SELECT ?, ?, ?, role_id FROM user_role WHERE code = ?
              ON CONFLICT (email) DO NOTHING'
         );
         $statement->execute([
             $name,
             $email,
             password_hash($password, PASSWORD_DEFAULT),
-            'Administrator',
+            'administrator',
         ]);
 
         echo "Administrator account ensured for {$email}\n";

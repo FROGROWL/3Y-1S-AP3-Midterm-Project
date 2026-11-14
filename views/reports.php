@@ -11,7 +11,8 @@ $statement = db()->prepare(
             COALESCE(SUM(h.quantity_kg * h.selling_price_per_kg), 0) AS gross_value
      FROM harvest h
      JOIN planting p ON p.planting_id = h.planting_id
-     JOIN crop c ON c.crop_id = p.crop_id
+     JOIN crop_variety v ON v.variety_id = p.variety_id
+     JOIN crop c ON c.crop_id = v.crop_id
      WHERE h.harvest_date BETWEEN ? AND ?
      GROUP BY c.crop_id, c.crop_name
      ORDER BY total_kg DESC'
