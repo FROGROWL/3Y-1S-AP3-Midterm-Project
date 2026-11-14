@@ -15,7 +15,7 @@ unset($_SESSION['flash']);
         type="image/png"
         href="img/agri-info-icon.png?v=<?= (int) filemtime(__DIR__ . '/../img/agri-info-icon.png') ?>"
     >
-    <meta name="theme-color" content="#f3f6f8">
+    <meta name="theme-color" content="#f0bd00">
     <script>
         try {
             const savedTheme = localStorage.getItem('agri-info-theme');
