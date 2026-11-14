@@ -16,7 +16,11 @@ require __DIR__ . '/layout-top.php';
             </button>
         </div>
         <div class="brand large">
-            <span class="brand-mark">A</span>
+            <img
+                class="brand-mark"
+                src="img/agri-info-icon.png?v=<?= (int) filemtime(__DIR__ . '/../img/agri-info-icon.png') ?>"
+                alt=""
+            >
             <span>Agri<span class="brand-light">Info</span></span>
         </div>
         <p class="eyebrow mt-5">AGRICULTURE INFORMATION SYSTEM</p>

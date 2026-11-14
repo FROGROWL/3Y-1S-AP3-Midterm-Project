@@ -10,6 +10,11 @@ unset($_SESSION['flash']);
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e($title) ?> | <?= e(envv('APP_NAME', 'AgriInfo')) ?></title>
+    <link
+        rel="icon"
+        type="image/png"
+        href="img/agri-info-icon.png?v=<?= (int) filemtime(__DIR__ . '/../img/agri-info-icon.png') ?>"
+    >
     <meta name="theme-color" content="#f3f6f8">
     <script>
         try {
@@ -33,7 +38,11 @@ unset($_SESSION['flash']);
         <div class="container">
             <div class="navbar-brand">
                 <a class="navbar-item brand" href="<?= e(url()) ?>">
-                    <span class="brand-mark">A</span>
+                    <img
+                        class="brand-mark"
+                        src="img/agri-info-icon.png?v=<?= (int) filemtime(__DIR__ . '/../img/agri-info-icon.png') ?>"
+                        alt=""
+                    >
                     <span>Agri<span class="brand-light">Info</span></span>
                 </a>
                 <a
