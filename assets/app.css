@@ -21,12 +21,13 @@
     --accent-teal: #007a5e;
     --accent-purple: #76528b;
     --accent-gold: #8a6900;
-    --card-blue: #e2f1f8;
-    --card-orange: #fff0df;
-    --card-teal: #e1f3ed;
-    --card-purple: #f0e9f5;
-    --card-gold: #f8f1d9;
-    --card-rose: #f8e8e6;
+    --welcome-bg: color-mix(in srgb, var(--accent-gold) 30%, var(--surface));
+    --card-blue: color-mix(in srgb, var(--accent-blue) 13%, var(--surface));
+    --card-orange: color-mix(in srgb, var(--accent-orange) 13%, var(--surface));
+    --card-teal: color-mix(in srgb, var(--accent-teal) 13%, var(--surface));
+    --card-purple: color-mix(in srgb, var(--accent-purple) 13%, var(--surface));
+    --card-gold: color-mix(in srgb, var(--accent-gold) 13%, var(--surface));
+    --card-rose: color-mix(in srgb, var(--danger) 13%, var(--surface));
 
     --bulma-body-background-color: var(--page-bg);
     --bulma-body-color: var(--text);
@@ -65,12 +66,13 @@
     --accent-teal: #42c7a0;
     --accent-purple: #c7a0e3;
     --accent-gold: #f0e442;
-    --card-blue: #19384b;
-    --card-orange: #49351d;
-    --card-teal: #193d35;
-    --card-purple: #382a48;
-    --card-gold: #443d1b;
-    --card-rose: #482b2a;
+    --welcome-bg: color-mix(in srgb, var(--accent-gold) 28%, var(--surface));
+    --card-blue: color-mix(in srgb, var(--accent-blue) 24%, var(--surface));
+    --card-orange: color-mix(in srgb, var(--accent-orange) 24%, var(--surface));
+    --card-teal: color-mix(in srgb, var(--accent-teal) 24%, var(--surface));
+    --card-purple: color-mix(in srgb, var(--accent-purple) 24%, var(--surface));
+    --card-gold: color-mix(in srgb, var(--accent-gold) 24%, var(--surface));
+    --card-rose: color-mix(in srgb, var(--danger) 24%, var(--surface));
 
     --bulma-body-background-color: var(--page-bg);
     --bulma-body-color: var(--text);
@@ -202,15 +204,7 @@ strong {
 
 .welcome {
     border-bottom: 1px solid var(--border);
-    background:
-        radial-gradient(ellipse at 85% 20%, #d7e8f1, transparent 42%),
-        linear-gradient(110deg, #e6eef3, #f8fafb);
-}
-
-:root[data-theme="dark"] .welcome {
-    background:
-        radial-gradient(ellipse at 85% 20%, #25445a, transparent 46%),
-        linear-gradient(110deg, #1b2b39, #17212b);
+    background: var(--welcome-bg);
 }
 
 .welcome .hero-body {
@@ -544,6 +538,51 @@ strong {
 .theme-icon {
     font-size: 1rem;
     line-height: 1;
+}
+
+.module-layout > .column {
+    min-width: 0;
+}
+
+.module-layout .table-card {
+    min-width: 0;
+}
+
+.module-layout .table-container {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.module-layout .field.has-addons {
+    flex-wrap: wrap;
+}
+
+.module-layout .field.has-addons .control.is-expanded {
+    min-width: min(100%, 12rem);
+}
+
+@media screen and (max-width: 1215px) {
+    .module-layout {
+        display: block;
+    }
+
+    .module-layout > .column,
+    .module-layout > .column.is-4 {
+        width: 100%;
+    }
+}
+
+@media screen and (max-width: 767px) {
+    .module-layout .box {
+        padding: 1rem;
+    }
+
+    .module-layout .field.has-addons .control,
+    .module-layout .field.has-addons .select,
+    .module-layout .field.has-addons select,
+    .module-layout .field.has-addons .input {
+        max-width: 100%;
+    }
 }
 
 @media screen and (max-width: 1439px) {

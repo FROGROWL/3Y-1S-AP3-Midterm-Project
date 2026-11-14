@@ -242,7 +242,7 @@ require __DIR__ . '/views/layout-top.php';
             </div>
         </div>
 
-        <div class="columns is-variable is-5">
+        <div class="columns is-variable is-5 module-layout">
             <div class="column is-4">
                 <div class="box form-card">
                     <h2 class="title is-5">
