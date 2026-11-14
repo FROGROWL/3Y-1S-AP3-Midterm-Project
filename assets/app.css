@@ -735,6 +735,37 @@ strong {
     min-width: min(100%, 12rem);
 }
 
+.planting-cycle-details {
+    margin-top: 0.75rem;
+    border: 2px solid var(--border);
+    border-left: 7px solid var(--accent-gold);
+    background: var(--surface-raised);
+    padding: 0.9rem;
+}
+
+.planting-cycle-details[hidden] {
+    display: none;
+}
+
+.planting-cycle-details .eyebrow {
+    margin-bottom: 0.75rem;
+}
+
+.planting-cycle-details .field {
+    margin-bottom: 0.65rem;
+}
+
+.planting-cycle-details .field:last-child {
+    margin-bottom: 0;
+}
+
+.planting-cycle-details .input[readonly] {
+    background: var(--surface);
+    color: var(--text);
+    font-weight: 700;
+    cursor: default;
+}
+
 @media screen and (max-width: 1215px) {
     .module-layout {
         display: block;

@@ -64,4 +64,38 @@ document.addEventListener('DOMContentLoaded', () => {
             toggle.setAttribute('aria-expanded', String(isExpanded));
         });
     });
+
+    const plantingSelect = document.querySelector('[data-planting-select]');
+    const plantingDetails = document.querySelector('[data-planting-details]');
+
+    if (plantingSelect && plantingDetails) {
+        const detailFields = plantingDetails.querySelectorAll('[data-planting-value]');
+        const dataKeys = {
+            crop: 'plantingCrop',
+            farm: 'plantingFarm',
+            planted: 'plantingPlanted',
+            expected: 'plantingExpected',
+            status: 'plantingStatus',
+        };
+
+        const updatePlantingDetails = () => {
+            const selectedOption = plantingSelect.selectedOptions[0];
+
+            if (!selectedOption?.value) {
+                plantingDetails.hidden = true;
+                detailFields.forEach((field) => {
+                    field.value = '';
+                });
+                return;
+            }
+
+            detailFields.forEach((field) => {
+                field.value = selectedOption.dataset[dataKeys[field.dataset.plantingValue]] || '';
+            });
+            plantingDetails.hidden = false;
+        };
+
+        plantingSelect.addEventListener('change', updatePlantingDetails);
+        updatePlantingDetails();
+    }
 });

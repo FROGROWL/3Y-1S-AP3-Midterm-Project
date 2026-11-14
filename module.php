@@ -194,23 +194,9 @@ $referenceTables = [
     ],
     'planting' => [
         'id' => 'planting.planting_id',
-        'label' => "crop.crop_name || ' / ' || variety.variety_name
-            || ' - ' || farm.farm_name
-            || ' - planted ' || to_char(planting.planting_date, 'Mon DD, YYYY')
-            || ' - expected ' || coalesce(
-                to_char(planting.expected_harvest_date, 'Mon DD, YYYY'),
-                'not set'
-            )
-            || ' - ' || status.label
-            || ' (#' || planting.planting_id::text || ')'",
-        'from' => 'planting
-            JOIN farm ON farm.farm_id = planting.farm_id
-            JOIN crop_variety variety ON variety.variety_id = planting.variety_id
-            JOIN crop ON crop.crop_id = variety.crop_id
-            JOIN planting_status status ON status.status_id = planting.status_id',
-        'order' => 'planting.expected_harvest_date NULLS LAST,
-            planting.planting_date DESC,
-            planting.planting_id DESC',
+        'label' => "'Planting #' || planting.planting_id::text",
+        'from' => 'planting',
+        'order' => 'planting.planting_id ASC',
     ],
     'harvest_remark' => ['id' => 'remark_id', 'label' => 'description'],
 ];
@@ -246,6 +232,32 @@ foreach ($module['fields'] as [$key, $label, $type]) {
              FROM {$lookupName}
              ORDER BY sort_order, label"
         )->fetchAll();
+    }
+}
+
+$plantingDetails = [];
+
+if ($page === 'harvests') {
+    $plantingRows = db()->query(
+        "SELECT planting.planting_id,
+                crop.crop_name || ' / ' || variety.variety_name AS crop,
+                farm.farm_name AS farm,
+                to_char(planting.planting_date, 'Mon DD, YYYY') AS planted,
+                coalesce(
+                    to_char(planting.expected_harvest_date, 'Mon DD, YYYY'),
+                    'Not set'
+                ) AS expected,
+                planting_status.label AS status
+         FROM planting
+         JOIN farm ON farm.farm_id = planting.farm_id
+         JOIN crop_variety variety ON variety.variety_id = planting.variety_id
+         JOIN crop ON crop.crop_id = variety.crop_id
+         JOIN planting_status
+           ON planting_status.status_id = planting.status_id"
+    )->fetchAll();
+
+    foreach ($plantingRows as $plantingRow) {
+        $plantingDetails[(string) $plantingRow['planting_id']] = $plantingRow;
     }
 }
 
@@ -290,14 +302,31 @@ require __DIR__ . '/views/layout-top.php';
                                                 id="<?= e($key) ?>"
                                                 name="<?= e($key) ?>"
                                                 <?= $required ? 'required' : '' ?>
+                                                <?= $page === 'harvests' && $key === 'planting_id' ? 'data-planting-select' : '' ?>
                                             >
                                                 <option value="">Select...</option>
                                                 <?php foreach ($references[$key] as $option): ?>
+                                                    <?php
+                                                    $showPlantingDetails = $page === 'harvests'
+                                                        && $key === 'planting_id';
+                                                    $details = $showPlantingDetails
+                                                        ? ($plantingDetails[(string) $option['id']] ?? [])
+                                                        : [];
+                                                    ?>
                                                     <option
                                                         value="<?= e($option['id']) ?>"
                                                         <?= (string) ($record[$key] ?? '') === (string) $option['id'] ? 'selected' : '' ?>
+                                                        <?php if ($showPlantingDetails): ?>
+                                                            data-planting-crop="<?= e($details['crop'] ?? '') ?>"
+                                                            data-planting-farm="<?= e($details['farm'] ?? '') ?>"
+                                                            data-planting-planted="<?= e($details['planted'] ?? '') ?>"
+                                                            data-planting-expected="<?= e($details['expected'] ?? '') ?>"
+                                                            data-planting-status="<?= e($details['status'] ?? '') ?>"
+                                                        <?php endif; ?>
                                                     >
-                                                        <?= e($option['label']) ?>
+                                                        <?= $showPlantingDetails
+                                                            ? 'Planting #' . e($option['id'])
+                                                            : e($option['label']) ?>
                                                     </option>
                                                 <?php endforeach; ?>
                                             </select>
@@ -334,9 +363,31 @@ require __DIR__ . '/views/layout-top.php';
                                 </div>
                                 <?php if ($page === 'harvests' && $key === 'planting_id'): ?>
                                     <p class="help">
-                                        Choose the crop and farm cycle. Each option shows its planting date,
-                                        expected harvest date, and current status.
+                                        Select a planting ID. Its crop, farm, dates, and status will appear below.
                                     </p>
+                                    <div class="planting-cycle-details" data-planting-details hidden>
+                                        <p class="eyebrow">SELECTED PLANTING DETAILS</p>
+                                        <div class="field">
+                                            <label class="label" for="planting_crop_detail">Crop / variety</label>
+                                            <input class="input" id="planting_crop_detail" data-planting-value="crop" readonly>
+                                        </div>
+                                        <div class="field">
+                                            <label class="label" for="planting_farm_detail">Farm</label>
+                                            <input class="input" id="planting_farm_detail" data-planting-value="farm" readonly>
+                                        </div>
+                                        <div class="field">
+                                            <label class="label" for="planting_date_detail">Planting date</label>
+                                            <input class="input" id="planting_date_detail" data-planting-value="planted" readonly>
+                                        </div>
+                                        <div class="field">
+                                            <label class="label" for="expected_harvest_detail">Expected harvest</label>
+                                            <input class="input" id="expected_harvest_detail" data-planting-value="expected" readonly>
+                                        </div>
+                                        <div class="field">
+                                            <label class="label" for="planting_status_detail">Current status</label>
+                                            <input class="input" id="planting_status_detail" data-planting-value="status" readonly>
+                                        </div>
+                                    </div>
                                 <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
@@ -425,7 +476,11 @@ require __DIR__ . '/views/layout-top.php';
                                                     );
                                                     $option = reset($options);
                                                     ?>
-                                                    <?= e($option['label'] ?? 'N/A') ?>
+                                                    <?php if ($page === 'harvests' && $key === 'planting_id'): ?>
+                                                        Planting #<?= e($row[$key]) ?>
+                                                    <?php else: ?>
+                                                        <?= e($option['label'] ?? 'N/A') ?>
+                                                    <?php endif; ?>
                                                 <?php elseif (str_starts_with($type, 'lookup:')): ?>
                                                     <?php
                                                     $options = array_column($references[$key], 'label', 'id');
