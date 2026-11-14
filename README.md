@@ -58,6 +58,8 @@ Before applying an update to a database that already contains records, create a 
 
 After installation, remove or blank the `INSTALL_ADMIN_EMAIL` and `INSTALL_ADMIN_PASSWORD` lines in `.env`. Keep the administrator password somewhere safe.
 
+If the database has already been installed but the administrator account is missing, set those two values again and run `C:\xampp\php\php.exe install.php --admin-only`. This creates the admin account without rerunning the migration or sample data scripts. If the `app_user` table does not exist yet, run the regular installer first.
+
 ### 5. Open the application
 
 With Apache running in XAMPP, open this address in your browser:

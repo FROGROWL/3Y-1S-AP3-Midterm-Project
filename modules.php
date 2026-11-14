@@ -72,7 +72,7 @@ return [
         'pk' => 'harvest_id',
         'search' => [],
         'fields' => [
-            ['planting_id', 'Planting', 'ref:planting', true],
+            ['planting_id', 'Planting cycle', 'ref:planting', true],
             ['harvest_date', 'Harvest date', 'date', true],
             ['quantity_kg', 'Quantity (kg)', 'number', true],
             ['selling_price_per_kg', 'Selling price/kg', 'number', false],

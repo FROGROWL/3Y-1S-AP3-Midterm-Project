@@ -192,7 +192,26 @@ $referenceTables = [
         'label' => "crop.crop_name || ' / ' || variety.variety_name",
         'from' => 'crop_variety variety JOIN crop ON crop.crop_id = variety.crop_id',
     ],
-    'planting' => ['id' => 'planting_id', 'label' => "'Planting #' || planting_id"],
+    'planting' => [
+        'id' => 'planting.planting_id',
+        'label' => "crop.crop_name || ' / ' || variety.variety_name
+            || ' - ' || farm.farm_name
+            || ' - planted ' || to_char(planting.planting_date, 'Mon DD, YYYY')
+            || ' - expected ' || coalesce(
+                to_char(planting.expected_harvest_date, 'Mon DD, YYYY'),
+                'not set'
+            )
+            || ' - ' || status.label
+            || ' (#' || planting.planting_id::text || ')",
+        'from' => 'planting
+            JOIN farm ON farm.farm_id = planting.farm_id
+            JOIN crop_variety variety ON variety.variety_id = planting.variety_id
+            JOIN crop ON crop.crop_id = variety.crop_id
+            JOIN planting_status status ON status.status_id = planting.status_id',
+        'order' => 'planting.expected_harvest_date NULLS LAST,
+            planting.planting_date DESC,
+            planting.planting_id DESC',
+    ],
     'harvest_remark' => ['id' => 'remark_id', 'label' => 'description'],
 ];
 $lookupTables = [
@@ -210,11 +229,12 @@ foreach ($module['fields'] as [$key, $label, $type]) {
         $reference = substr($type, 4);
         $referenceInfo = $referenceTables[$reference];
         $from = $referenceInfo['from'] ?? $reference;
+        $order = $referenceInfo['order'] ?? 'label';
         $references[$key] = db()->query(
             "SELECT {$referenceInfo['id']} AS id,
                     {$referenceInfo['label']} AS label
              FROM {$from}
-             ORDER BY label"
+             ORDER BY {$order}"
         )->fetchAll();
     }
 
@@ -312,6 +332,12 @@ require __DIR__ . '/views/layout-top.php';
                                         >
                                     <?php endif; ?>
                                 </div>
+                                <?php if ($page === 'harvests' && $key === 'planting_id'): ?>
+                                    <p class="help">
+                                        Choose the crop and farm cycle. Each option shows its planting date,
+                                        expected harvest date, and current status.
+                                    </p>
+                                <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
 

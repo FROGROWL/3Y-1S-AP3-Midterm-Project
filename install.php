@@ -10,40 +10,55 @@ if (PHP_SAPI !== 'cli') {
 
 try {
     $pdo = db();
-    $legacySchema = (bool) $pdo->query(
-        "SELECT EXISTS (
-            SELECT 1 FROM information_schema.columns
-            WHERE table_schema = current_schema()
-              AND table_name = 'crop'
-              AND column_name = 'variety'
-        )"
-    )->fetchColumn();
+    $adminOnly = in_array('--admin-only', $argv, true);
 
-    if ($legacySchema) {
-        $migration = file_get_contents(
-            __DIR__ . '/sql/migrations/001_integer_lookup_normalization.sql'
-        );
+    if ($adminOnly) {
+        $hasUserTable = $pdo->query("SELECT to_regclass('public.app_user')")
+            ->fetchColumn();
 
-        if ($migration === false) {
-            throw new RuntimeException('Missing integer lookup migration.');
+        if (!$hasUserTable) {
+            throw new RuntimeException(
+                'The app_user table does not exist. Run install.php once without --admin-only first.'
+            );
         }
 
-        $pdo->exec($migration);
-        echo "Applied 001_integer_lookup_normalization.sql\n";
-    }
+        echo "Admin-only mode: schema and sample data were left unchanged.\n";
+    } else {
+        $legacySchema = (bool) $pdo->query(
+            "SELECT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_schema = current_schema()
+                  AND table_name = 'crop'
+                  AND column_name = 'variety'
+            )"
+        )->fetchColumn();
 
-    $sqlFiles = ['schema.sql', 'lookup_data.sql', 'sample_data.sql'];
+        if ($legacySchema) {
+            $migration = file_get_contents(
+                __DIR__ . '/sql/migrations/001_integer_lookup_normalization.sql'
+            );
 
-    foreach ($sqlFiles as $file) {
-        $path = __DIR__ . '/sql/' . $file;
-        $sql = file_get_contents($path);
+            if ($migration === false) {
+                throw new RuntimeException('Missing integer lookup migration.');
+            }
 
-        if ($sql === false) {
-            throw new RuntimeException("Missing SQL file: {$file}");
+            $pdo->exec($migration);
+            echo "Applied 001_integer_lookup_normalization.sql\n";
         }
 
-        $pdo->exec($sql);
-        echo "Applied {$file}\n";
+        $sqlFiles = ['schema.sql', 'lookup_data.sql', 'sample_data.sql'];
+
+        foreach ($sqlFiles as $file) {
+            $path = __DIR__ . '/sql/' . $file;
+            $sql = file_get_contents($path);
+
+            if ($sql === false) {
+                throw new RuntimeException("Missing SQL file: {$file}");
+            }
+
+            $pdo->exec($sql);
+            echo "Applied {$file}\n";
+        }
     }
 
     $email = envv('INSTALL_ADMIN_EMAIL');
