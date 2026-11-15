@@ -3,7 +3,7 @@ require_admin();
 $layoutTitle = 'Audit logs';
 $pdo = db();
 $pageNumber = max(1, (int) ($_GET['p'] ?? 1));
-$perPage = 25;
+$perPage = 10;
 $filters = [
     'user' => trim((string) ($_GET['user'] ?? '')),
     'action' => trim((string) ($_GET['action'] ?? '')),

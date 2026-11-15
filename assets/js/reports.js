@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+const initializeReportFilters = () => {
     const reportScope = document.querySelector('#scope');
     const reportGrouping = document.querySelector('#group_by');
     const updateReportGrouping = () => {
@@ -8,4 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     reportScope?.addEventListener('change', updateReportGrouping);
     updateReportGrouping();
-});
+};
+
+document.addEventListener('DOMContentLoaded', initializeReportFilters, { once: true });
+document.addEventListener('agri:page-updated', initializeReportFilters);

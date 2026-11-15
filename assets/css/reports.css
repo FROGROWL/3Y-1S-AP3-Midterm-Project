@@ -10,9 +10,25 @@
 
 .performance-chart.is-scrollable {
     max-height: 28.25rem;
-    overflow-y: auto;
+    overflow-y: scroll;
     overscroll-behavior: contain;
     padding-right: 0.5rem;
+    scrollbar-gutter: stable;
+    scrollbar-color: var(--primary) var(--surface-raised);
+    scrollbar-width: auto;
+}
+
+.performance-chart.is-scrollable::-webkit-scrollbar {
+    width: 0.85rem;
+}
+
+.performance-chart.is-scrollable::-webkit-scrollbar-track {
+    background: var(--surface-raised);
+}
+
+.performance-chart.is-scrollable::-webkit-scrollbar-thumb {
+    border: 2px solid var(--surface-raised);
+    background: var(--primary);
 }
 
 .performance-chart-row {

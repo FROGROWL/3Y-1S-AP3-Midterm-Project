@@ -30,6 +30,14 @@
     background: color-mix(in srgb, var(--surface-raised) 65%, var(--surface));
 }
 
+.recent-harvest-panel .table a {
+    color: var(--text);
+}
+
+.recent-harvest-panel .table a:hover {
+    color: var(--primary);
+}
+
 .actions {
     display: flex;
     gap: 0.35rem;

@@ -1,6 +1,7 @@
 <section class="box report-chart-panel">
                 <div class="panel-heading-row"><div><p class="eyebrow"><?= e($dimensionLabel) ?></p><h2 class="title is-5"><?= e($metricLabel) ?></h2></div><span class="tag is-warning is-light"><?= e($from) ?> to <?= e($to) ?></span></div>
                 <?php if ($rows): ?>
+                    <?php if (count($rows) > 10): ?><p class="help">Scroll within the chart to see all <?= number_format(count($rows)) ?> results.</p><?php endif; ?>
                     <div class="performance-chart<?= count($rows) > 10 ? ' is-scrollable' : '' ?>" role="img" aria-label="Bar chart of <?= e($metricLabel) ?> by <?= e(strtolower($dimensionLabel)) ?>">
                         <?php foreach ($rows as $row): ?>
                             <?php $value = max(0, (float) ($row[$metric] ?? 0)); $width = $maxValue > 0 ? ($value / $maxValue * 100) : 0; ?>

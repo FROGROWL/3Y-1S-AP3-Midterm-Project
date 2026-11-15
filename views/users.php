@@ -29,7 +29,7 @@ require __DIR__ . '/layout-top.php';
             </div>
             <div class="column">
                 <div class="box table-card">
-                    <div class="table-container"><table class="table is-fullwidth is-hoverable">
+                    <div class="table-container"><table class="table is-fullwidth is-striped is-hoverable">
                         <thead><tr><th>Name / email</th><th>Role</th><th>Account</th><th>Current activity</th><th>Last login</th><th></th></tr></thead>
                         <tbody>
                             <?php foreach ($users as $account): ?>

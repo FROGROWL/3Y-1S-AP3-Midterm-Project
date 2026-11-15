@@ -125,3 +125,4 @@ unset($_SESSION['flash']);
         </div>
     </div>
 <?php endif; ?>
+<div id="page-content">

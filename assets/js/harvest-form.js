@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+const initializeHarvestForm = () => {
     const harvestQuantity = document.querySelector('#quantity_kg');
     const sellingPrice = document.querySelector('#selling_price_per_kg');
     const harvestEstimate = document.querySelector('[data-harvest-estimate]');
@@ -14,4 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     harvestQuantity?.addEventListener('input', updateHarvestEstimate);
     sellingPrice?.addEventListener('input', updateHarvestEstimate);
     updateHarvestEstimate();
-});
+};
+
+document.addEventListener('DOMContentLoaded', initializeHarvestForm, { once: true });
+document.addEventListener('agri:page-updated', initializeHarvestForm);

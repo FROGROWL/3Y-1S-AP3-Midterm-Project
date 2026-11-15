@@ -8,7 +8,7 @@
                     <a class="button is-small is-light" href="<?= e(url('page=audit')) ?>">All audit logs</a>
                 </div>
                 <div class="table-container">
-                    <table class="table is-fullwidth is-hoverable">
+                    <table class="table is-fullwidth is-striped is-hoverable">
                         <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Record ID</th></tr></thead>
                         <tbody>
                             <?php foreach ($todayAudit as $entry): ?>

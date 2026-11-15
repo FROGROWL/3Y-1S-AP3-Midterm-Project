@@ -74,7 +74,7 @@ require __DIR__ . '/layout-top.php';
                 </div>
             </form>
             <div class="table-container">
-                <table class="table is-fullwidth is-hoverable">
+                <table class="table is-fullwidth is-striped is-hoverable">
                     <thead><tr><th>Date and time</th><th>User</th><th>Action / module</th><th>Change details</th></tr></thead>
                     <tbody>
                         <?php foreach ($logs as $log): ?>
@@ -90,6 +90,7 @@ require __DIR__ . '/layout-top.php';
                     </tbody>
                 </table>
             </div>
+            <?php if ($total > 10): ?>
             <nav class="pagination is-right" aria-label="Audit log pages">
                 <?php $previousQuery = $pageQuery + ['p' => max(1, $pageNumber - 1)]; ?>
                 <?php $nextQuery = $pageQuery + ['p' => min($totalPages, $pageNumber + 1)]; ?>
@@ -97,6 +98,7 @@ require __DIR__ . '/layout-top.php';
                 <a class="pagination-next" href="<?= e(url(http_build_query($nextQuery))) ?>" <?= $pageNumber >= $totalPages ? 'disabled' : '' ?>>Next</a>
                 <span class="pagination-list">Page <?= $pageNumber ?> of <?= $totalPages ?> · <?= number_format($total) ?> events</span>
             </nav>
+            <?php endif; ?>
         </div>
     </div>
 </section>

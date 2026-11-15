@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+const initializePlantingForm = () => {
     const plantingSelect = document.querySelector('[data-planting-select]');
     const plantingDetails = document.querySelector('[data-planting-details]');
 
@@ -153,4 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
     varietySelect?.addEventListener('change', updatePlantingSchedule);
     plantingDate?.addEventListener('change', updatePlantingSchedule);
     updatePlantingSchedule();
-});
+};
+
+document.addEventListener('DOMContentLoaded', initializePlantingForm, { once: true });
+document.addEventListener('agri:page-updated', initializePlantingForm);

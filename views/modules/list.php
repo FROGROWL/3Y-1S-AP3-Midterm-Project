@@ -67,7 +67,7 @@
                     </form>
 
                     <div class="table-container">
-                        <table class="table is-fullwidth is-hoverable">
+                        <table class="table is-fullwidth is-striped is-hoverable">
                             <thead>
                                 <tr>
                                     <th>ID</th>
