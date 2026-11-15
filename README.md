@@ -115,7 +115,9 @@ In pgAdmin, register a server with the same Supabase host, port, database, usern
 
 - Login, password hashing, CSRF protection, Staff and Administrator roles, and audit records.
 - CRUD pages for farmers, farms, crops, plantings, and harvests.
-- Search, sorting, pagination, relationship dropdowns, validation, and delete confirmation.
+- Field-based filters, sorting, pagination, relationship dropdowns, and validation.
+- Theme-styled popup notifications for success, errors, and other feedback. Delete confirmations identify the record and describe related records that would also be removed; deletions blocked by relationships explain what must be removed first.
+- Audit log detail popups show the saved record information, creation time, before/after values for updates, and cascade counts for deletions.
 - Role-specific dashboard navigation, current-user activity tracking, and administrator-only date-filtered performance reports.
 - PostgreSQL relationships, constraints, timestamps, lookup values, and sample records.
 
@@ -125,7 +127,7 @@ In pgAdmin, register a server with the same Supabase host, port, database, usern
 - `bootstrap.php`, `includes/core/`, `Database.php`: startup, environment loading, shared helpers, and PDO connection.
 - `install.php`, `sql/`: database installation and demo data.
 - `includes/`: feature-specific actions and data preparation; `views/`: page templates and smaller view partials.
-- `assets/`: feature-organized CSS and JavaScript, loaded through small entry files.
+- `assets/`: feature-organized CSS and JavaScript, including shared dialogs and notifications, loaded through small entry files.
 - `docs/`: [system documentation](docs/system-documentation.md), normalization, data dictionary, verification notes, and the [code structure guide](docs/code-structure.md).
 
 For data relationships and normalization, see [docs/normalization.md](docs/normalization.md). For the table columns, see [docs/data-dictionary.md](docs/data-dictionary.md).

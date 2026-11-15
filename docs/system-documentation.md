@@ -29,6 +29,9 @@ AgriInfo is a web-based agriculture information system for recording farmer and 
 
 - Authorized users can create, view, edit, filter, sort, and paginate farmer, farm, crop, variety, planting, and harvest records.
 - Forms use database-backed dropdowns for related records and fixed reference values.
+- Success, error, and informational feedback appears in theme-styled popup notifications. Success and informational notices dismiss automatically; errors remain until dismissed.
+- Delete confirmations identify the selected record and describe the related records that would be deleted by database cascades. If a record is still referenced and cannot be deleted, the dialog explains the relationship that must be cleared first; the server checks this again when processing a deletion.
+- Planting status overrides that fall outside the date-based guideline require an in-app confirmation dialog before saving.
 - Planting entry calculates expected harvest date from variety growing-period days, checks remaining farm area, and validates planting status against the planting and harvest dates.
 - Harvest entry is limited to plantings that are ready to harvest. Quantity and selling price are used to show an estimated gross total; saving a harvest updates the planting status.
 - Dashboard watch lists highlight planting and harvest items that need attention. Dashboard lists paginate when they exceed seven items; module lists paginate when they exceed ten.
@@ -36,7 +39,7 @@ AgriInfo is a web-based agriculture information system for recording farmer and 
 ### Oversight and reporting
 
 - Administrators can add or edit user accounts and review audit activity.
-- Audit logs record sign-in/sign-out and record changes with date, action, module, user, and concise change details.
+- Audit logs record sign-in/sign-out and record changes with date, action, module, user, and concise change details. A **View details** popup displays the available record fields, creation timestamp, before/after snapshots for updates, and related-row counts for deletions. Sensitive password/hash fields are excluded.
 - Administrators can build farm or crop performance reports with a date range, grouping, metric, filters, and sort direction. Measures include recorded and projected quantity/value, harvest count, average yield, quality, and cancelled plantings.
 
 ## 4. Entity-Relationship Diagram
@@ -260,6 +263,7 @@ The installer, live database connection, sign-in against PostgreSQL, CRUD persis
 3. Add or edit records with the page form. Choose related records from the dropdowns and follow validation messages. Planting expected harvest dates are calculated from the selected variety and planting date.
 4. For a harvest, select a planting marked ready to harvest, enter date/quantity/price and other requested details, review the estimated total, then save.
 5. Use dashboard watch items to open the related record. Administrator-only Users, Reports, and Audit pages are available from the Administrator navigation.
-6. Sign out when finished, especially on shared computers. Audit Logs provides the historical event record to Administrators.
+6. When deleting a record, review the confirmation dialog. It identifies the record and lists dependent data that will be removed, or explains if related plantings prevent the deletion.
+7. Sign out when finished, especially on shared computers. Administrators can open Audit Logs and select **View details** to inspect the saved record snapshot and change information.
 
 For installation settings and hosting details, see the [README](../README.md). For the code map, see [code-structure.md](code-structure.md).
