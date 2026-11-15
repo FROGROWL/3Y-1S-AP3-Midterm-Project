@@ -22,6 +22,7 @@
     --accent-teal: #007a5e;
     --accent-purple: #76528b;
     --accent-gold: #f0bd00;
+    --chart-track: #91834e;
     --welcome-bg: #f0bd00;
     --card-blue: color-mix(in srgb, var(--accent-blue) 13%, var(--surface));
     --card-orange: color-mix(in srgb, var(--accent-orange) 13%, var(--surface));
@@ -68,6 +69,7 @@
     --accent-teal: #42c7a0;
     --accent-purple: #c7a0e3;
     --accent-gold: #ffd43b;
+    --chart-track: #526271;
     --welcome-bg: #5e4b0c;
     --card-blue: color-mix(in srgb, var(--accent-blue) 24%, var(--surface));
     --card-orange: color-mix(in srgb, var(--accent-orange) 24%, var(--surface));
@@ -788,7 +790,7 @@ strong {
 .performance-chart-track {
     height: 1rem;
     overflow: hidden;
-    background: var(--border);
+    background: var(--chart-track);
 }
 
 .performance-chart-track span {

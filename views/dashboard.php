@@ -161,13 +161,15 @@ $recentHarvests = $pdo->prepare(
 );
 $recentHarvests->execute([$sixMonthsAgo, $todayDate]);
 $recentHarvests = $recentHarvests->fetchAll();
+$todayAuditPage = max(1, (int) ($_GET['today_audit_page'] ?? 1));
 $dashboardPageState = [
     'page' => 'dashboard',
     'status_watch_page' => $statusWatchPage,
     'harvest_watch_page' => $harvestWatchPage,
     'recent_harvest_page' => $recentHarvestPage,
+    'today_audit_page' => $todayAuditPage,
 ];
-$renderDashboardPagination = static function (string $parameter, int $currentPage, int $totalPages) use ($dashboardPageState): string {
+$renderDashboardPagination = static function (string $parameter, int $currentPage, int $totalPages) use (&$dashboardPageState): string {
     if ($totalPages <= 1) {
         return '';
     }
@@ -186,18 +188,28 @@ $renderDashboardPagination = static function (string $parameter, int $currentPag
 
 $todayAudit = [];
 if ($isAdmin) {
-    $todayAudit = $pdo->query(
+    $todayAuditCount = $pdo->prepare(
+        "SELECT COUNT(*) FROM audit_log log
+         WHERE (log.occurred_at AT TIME ZONE 'Asia/Manila')::date = ?::date"
+    );
+    $todayAuditCount->execute([$todayDate]);
+    $todayAuditTotal = (int) $todayAuditCount->fetchColumn();
+    $todayAuditPages = max(1, (int) ceil($todayAuditTotal / $watchPerPage));
+    $todayAuditPage = min($todayAuditPage, $todayAuditPages);
+    $dashboardPageState['today_audit_page'] = $todayAuditPage;
+    $todayAudit = $pdo->prepare(
         "SELECT log.audit_id, log.occurred_at, log.entity_record_id,
                 account.full_name, action.label AS action, entity.label AS entity
          FROM audit_log log
          LEFT JOIN app_user account ON account.user_id = log.user_id
          JOIN audit_action action ON action.action_id = log.action_id
          JOIN audit_entity entity ON entity.entity_type_id = log.entity_type_id
-         WHERE (log.occurred_at AT TIME ZONE 'Asia/Manila')::date =
-               (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Manila')::date
+         WHERE (log.occurred_at AT TIME ZONE 'Asia/Manila')::date = ?::date
          ORDER BY log.occurred_at DESC, log.audit_id DESC
-         LIMIT 10"
-    )->fetchAll();
+         LIMIT {$watchPerPage} OFFSET " . (($todayAuditPage - 1) * $watchPerPage)
+    );
+    $todayAudit->execute([$todayDate]);
+    $todayAudit = $todayAudit->fetchAll();
 }
 
 require __DIR__ . '/layout-top.php';
@@ -388,6 +400,7 @@ require __DIR__ . '/layout-top.php';
                         </tbody>
                     </table>
                 </div>
+                <?= $renderDashboardPagination('today_audit_page', $todayAuditPage, $todayAuditPages) ?>
             </section>
         <?php endif; ?>
 

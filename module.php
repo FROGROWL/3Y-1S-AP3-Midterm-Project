@@ -283,6 +283,15 @@ if ($editId) {
     $statement->execute([$editId]);
     $record = $statement->fetch();
 }
+$moduleName = match ($page) {
+    'farmers' => 'Farmer',
+    'farms' => 'Farm',
+    'crops' => 'Crop',
+    'varieties' => 'Crop variety',
+    'plantings' => 'Planting',
+    'harvests' => 'Harvest',
+    default => $module['title'],
+};
 
 $filterFields = [
     $primaryKey => ['label' => 'ID', 'type' => 'integer'],
@@ -733,7 +742,7 @@ require __DIR__ . '/views/layout-top.php';
                     <form method="get" class="columns is-multiline is-vcentered mb-5">
                         <input type="hidden" name="page" value="<?= e($page) ?>">
                         <div class="column is-one-quarter-desktop is-half-tablet">
-                            <label class="label is-small" for="filter-primary-id">Primary ID (<?= e($primaryKey) ?>)</label>
+                            <label class="label is-small" for="filter-primary-id"><?= e($moduleName) ?> ID</label>
                             <input class="input is-small" type="number" min="1" step="1" id="filter-primary-id"
                                 name="filter[<?= e($primaryKey) ?>]" value="<?= e($filters[$primaryKey] ?? '') ?>"
                                 placeholder="Enter exact ID">
@@ -741,7 +750,7 @@ require __DIR__ . '/views/layout-top.php';
                         <?php foreach ($module['fields'] as [$fieldKey, $fieldLabel, $fieldType]): ?>
                             <div class="column is-one-quarter-desktop is-half-tablet">
                                 <label class="label is-small" for="filter-<?= e($fieldKey) ?>"><?= e($fieldLabel) ?></label>
-                                <?php if (str_starts_with($fieldType, 'lookup:')): ?>
+                                <?php if (str_starts_with($fieldType, 'lookup:') || $fieldType === 'ref:harvest_remark'): ?>
                                     <div class="select is-small is-fullwidth">
                                         <select id="filter-<?= e($fieldKey) ?>" name="filter[<?= e($fieldKey) ?>]">
                                             <option value="">All</option>
@@ -765,25 +774,29 @@ require __DIR__ . '/views/layout-top.php';
                                 <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
-                        <div class="column is-one-quarter-desktop is-half-tablet">
-                            <label class="label is-small" for="module-sort">Order by</label>
-                            <div class="select is-small is-fullwidth">
-                                <select id="module-sort" name="sort">
-                                    <?php foreach ($allowedSort as $column): ?>
-                                        <option value="<?= e($column) ?>" <?= $sort === $column ? 'selected' : '' ?>>
-                                            <?= e(ucwords(str_replace('_', ' ', $column))) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="column is-one-quarter-desktop is-half-tablet">
-                            <label class="label is-small" for="module-direction">Direction</label>
-                            <div class="select is-small is-fullwidth">
-                                <select id="module-direction" name="dir">
-                                    <option value="asc" <?= $direction === 'ASC' ? 'selected' : '' ?>>Ascending</option>
-                                    <option value="desc" <?= $direction === 'DESC' ? 'selected' : '' ?>>Descending</option>
-                                </select>
+                        <div class="column is-half-desktop is-full-tablet">
+                            <div class="columns is-mobile is-variable is-2">
+                                <div class="column">
+                                    <label class="label is-small" for="module-sort">Order by</label>
+                                    <div class="select is-small is-fullwidth">
+                                        <select id="module-sort" name="sort">
+                                            <?php foreach ($allowedSort as $column): ?>
+                                                <option value="<?= e($column) ?>" <?= $sort === $column ? 'selected' : '' ?>>
+                                                    <?= e(ucwords(str_replace('_', ' ', $column))) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="column">
+                                    <label class="label is-small" for="module-direction">Direction</label>
+                                    <div class="select is-small is-fullwidth">
+                                        <select id="module-direction" name="dir">
+                                            <option value="asc" <?= $direction === 'ASC' ? 'selected' : '' ?>>Ascending</option>
+                                            <option value="desc" <?= $direction === 'DESC' ? 'selected' : '' ?>>Descending</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="column is-full">
@@ -874,6 +887,7 @@ require __DIR__ . '/views/layout-top.php';
                     $previousUrl = url(http_build_query($pageQuery + ['p' => max(1, $currentPage - 1)]));
                     $nextUrl = url(http_build_query($pageQuery + ['p' => min($totalPages, $currentPage + 1)]));
                     ?>
+                    <?php if ($totalPages > 1): ?>
                     <nav class="pagination is-right">
                         <a
                             class="pagination-previous"
@@ -893,6 +907,7 @@ require __DIR__ . '/views/layout-top.php';
                             Page <?= $currentPage ?> of <?= $totalPages ?> | <?= $total ?> records
                         </span>
                     </nav>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
