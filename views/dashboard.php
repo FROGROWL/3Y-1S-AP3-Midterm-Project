@@ -2,6 +2,9 @@
 $isAdmin = (user()['role'] ?? '') === 'Administrator';
 $layoutTitle = 'Overview';
 $pdo = db();
+$manilaToday = new DateTimeImmutable('today', new DateTimeZone('Asia/Manila'));
+$todayDate = $manilaToday->format('Y-m-d');
+$watchPerPage = 7;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'advance_planting') {
     check_csrf();
@@ -16,13 +19,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'advan
                WHEN 'planting' THEN 'growing'
                WHEN 'growing' THEN 'ready'
            END
-           AND ((current_status.code = 'planting' AND p.planting_date < CURRENT_DATE)
+           AND ((current_status.code = 'planting' AND p.planting_date < ?::date)
              OR (current_status.code = 'growing'
-                 AND p.planting_date <= CURRENT_DATE
-                 AND p.expected_harvest_date <= CURRENT_DATE + INTERVAL '20 days'))
+                 AND p.planting_date <= ?::date
+                 AND p.expected_harvest_date <= ?::date + INTERVAL '20 days'))
          RETURNING p.planting_id"
     );
-    $advance->execute([$plantingId]);
+    $advance->execute([$plantingId, $todayDate, $todayDate, $todayDate]);
     $advancedId = $advance->fetchColumn();
     if ($advancedId) {
         $statusLookup = $pdo->prepare(
@@ -83,7 +86,18 @@ $statusSummary = $pdo->query(
      ORDER BY s.sort_order, s.label'
 )->fetchAll();
 
-$statusWatch = $pdo->query(
+$statusWatchPage = max(1, (int) ($_GET['status_watch_page'] ?? 1));
+$statusWatchCondition = "((s.code = 'planting' AND p.planting_date < ?::date)
+    OR (s.code = 'growing' AND p.planting_date <= ?::date
+        AND p.expected_harvest_date <= ?::date + INTERVAL '20 days'))";
+$statusWatchCount = $pdo->prepare(
+    'SELECT COUNT(*) FROM planting p JOIN planting_status s ON s.status_id = p.status_id WHERE ' . $statusWatchCondition
+);
+$statusWatchCount->execute([$todayDate, $todayDate, $todayDate]);
+$statusWatchTotal = (int) $statusWatchCount->fetchColumn();
+$statusWatchPages = max(1, (int) ceil($statusWatchTotal / $watchPerPage));
+$statusWatchPage = min($statusWatchPage, $statusWatchPages);
+$statusWatch = $pdo->prepare(
     "SELECT p.planting_id, p.planting_date, p.expected_harvest_date, s.code, s.label AS status,
             c.crop_name, v.variety_name, f.farm_name
      FROM planting p
@@ -91,15 +105,24 @@ $statusWatch = $pdo->query(
      JOIN crop_variety v ON v.variety_id = p.variety_id
      JOIN crop c ON c.crop_id = v.crop_id
      JOIN farm f ON f.farm_id = p.farm_id
-     WHERE (s.code = 'planting' AND p.planting_date < CURRENT_DATE)
-        OR (s.code = 'growing' AND p.planting_date <= CURRENT_DATE
-            AND p.expected_harvest_date <= CURRENT_DATE + INTERVAL '20 days')
+     WHERE {$statusWatchCondition}
      ORDER BY CASE WHEN s.code = 'planting' THEN 0 ELSE 1 END,
               p.expected_harvest_date NULLS LAST, p.planting_id
-     LIMIT 8"
-)->fetchAll();
+     LIMIT {$watchPerPage} OFFSET " . (($statusWatchPage - 1) * $watchPerPage)
+);
+$statusWatch->execute([$todayDate, $todayDate, $todayDate]);
+$statusWatch = $statusWatch->fetchAll();
 
-$harvestWatch = $pdo->query(
+$harvestWatchPage = max(1, (int) ($_GET['harvest_watch_page'] ?? 1));
+$harvestWatchCount = $pdo->prepare(
+    "SELECT COUNT(*) FROM planting p JOIN planting_status s ON s.status_id = p.status_id
+     WHERE p.expected_harvest_date <= ?::date + INTERVAL '20 days' AND s.code = 'ready'"
+);
+$harvestWatchCount->execute([$todayDate]);
+$harvestWatchTotal = (int) $harvestWatchCount->fetchColumn();
+$harvestWatchPages = max(1, (int) ceil($harvestWatchTotal / $watchPerPage));
+$harvestWatchPage = min($harvestWatchPage, $harvestWatchPages);
+$harvestWatch = $pdo->prepare(
     "SELECT p.planting_id, p.expected_harvest_date, s.label AS status,
             c.crop_name, v.variety_name, f.farm_name
      FROM planting p
@@ -107,14 +130,24 @@ $harvestWatch = $pdo->query(
      JOIN crop_variety v ON v.variety_id = p.variety_id
      JOIN crop c ON c.crop_id = v.crop_id
      JOIN farm f ON f.farm_id = p.farm_id
-     WHERE p.expected_harvest_date <= CURRENT_DATE + INTERVAL '20 days'
+     WHERE p.expected_harvest_date <= ?::date + INTERVAL '20 days'
        AND s.code = 'ready'
      ORDER BY p.expected_harvest_date, p.planting_id
-     LIMIT 6"
-)->fetchAll();
+     LIMIT {$watchPerPage} OFFSET " . (($harvestWatchPage - 1) * $watchPerPage)
+);
+$harvestWatch->execute([$todayDate]);
+$harvestWatch = $harvestWatch->fetchAll();
 
-$recentHarvests = $pdo->query(
+$recentHarvestPage = max(1, (int) ($_GET['recent_harvest_page'] ?? 1));
+$sixMonthsAgo = $manilaToday->modify('-6 months')->format('Y-m-d');
+$recentHarvestCount = $pdo->prepare('SELECT COUNT(*) FROM harvest WHERE harvest_date BETWEEN ? AND ?');
+$recentHarvestCount->execute([$sixMonthsAgo, $todayDate]);
+$recentHarvestTotal = (int) $recentHarvestCount->fetchColumn();
+$recentHarvestPages = max(1, (int) ceil($recentHarvestTotal / $watchPerPage));
+$recentHarvestPage = min($recentHarvestPage, $recentHarvestPages);
+$recentHarvests = $pdo->prepare(
     'SELECT h.harvest_date, h.quantity_kg,
+            h.harvest_id,
             c.crop_name || \' / \' || v.variety_name AS crop_display,
             f.farm_name
      FROM harvest h
@@ -122,9 +155,34 @@ $recentHarvests = $pdo->query(
      JOIN crop_variety v ON v.variety_id = p.variety_id
      JOIN crop c ON c.crop_id = v.crop_id
      JOIN farm f ON f.farm_id = p.farm_id
+     WHERE h.harvest_date BETWEEN ? AND ?
      ORDER BY h.harvest_date DESC, h.harvest_id DESC
-     LIMIT 8'
-)->fetchAll();
+     LIMIT ' . $watchPerPage . ' OFFSET ' . (($recentHarvestPage - 1) * $watchPerPage)
+);
+$recentHarvests->execute([$sixMonthsAgo, $todayDate]);
+$recentHarvests = $recentHarvests->fetchAll();
+$dashboardPageState = [
+    'page' => 'dashboard',
+    'status_watch_page' => $statusWatchPage,
+    'harvest_watch_page' => $harvestWatchPage,
+    'recent_harvest_page' => $recentHarvestPage,
+];
+$renderDashboardPagination = static function (string $parameter, int $currentPage, int $totalPages) use ($dashboardPageState): string {
+    if ($totalPages <= 1) {
+        return '';
+    }
+    $previous = $dashboardPageState;
+    $previous[$parameter] = max(1, $currentPage - 1);
+    $next = $dashboardPageState;
+    $next[$parameter] = min($totalPages, $currentPage + 1);
+    return '<nav class="pagination is-small is-centered mt-3" aria-label="Dashboard list pages">'
+        . '<a class="pagination-previous" href="' . e(url(http_build_query($previous))) . '"'
+        . ($currentPage <= 1 ? ' disabled' : '') . '>Previous</a>'
+        . '<a class="pagination-next" href="' . e(url(http_build_query($next))) . '"'
+        . ($currentPage >= $totalPages ? ' disabled' : '') . '>Next</a>'
+        . '<span class="pagination-list">Page ' . $currentPage . ' of ' . $totalPages . '</span>'
+        . '</nav>';
+};
 
 $todayAudit = [];
 if ($isAdmin) {
@@ -248,7 +306,7 @@ require __DIR__ . '/layout-top.php';
                                 ?>
                                 <a
                                     class="watch-item"
-                                    href="<?= e(url('page=plantings&edit=' . $planting['planting_id'])) ?>"
+                                    href="<?= e(url(http_build_query(['page' => 'plantings', 'filter' => ['planting_id' => $planting['planting_id']]]))) ?>"
                                 >
                                     <span class="watch-copy">
                                         <strong><?= e($cropLabel) ?></strong>
@@ -260,6 +318,7 @@ require __DIR__ . '/layout-top.php';
                                 </a>
                             <?php endforeach; ?>
                         </div>
+                        <?= $renderDashboardPagination('harvest_watch_page', $harvestWatchPage, $harvestWatchPages) ?>
                     <?php else: ?>
                         <p class="panel-empty">
                             No ready plantings are due within the next 20 days.
@@ -279,10 +338,10 @@ require __DIR__ . '/layout-top.php';
                         <div class="watch-list">
                             <?php foreach ($statusWatch as $planting): ?>
                                 <div class="watch-item status-watch-item">
-                                    <span class="watch-copy">
+                                    <a class="watch-copy" href="<?= e(url(http_build_query(['page' => 'plantings', 'filter' => ['planting_id' => $planting['planting_id']]]))) ?>">
                                         <strong>#<?= e($planting['planting_id']) ?> · <?= e($planting['crop_name'] . ' / ' . $planting['variety_name']) ?></strong>
                                         <small><?= e($planting['farm_name']) ?> · <?= e($planting['status']) ?> · <?= e(date('M j, Y', strtotime($planting['planting_date']))) ?></small>
-                                    </span>
+                                    </a>
                                     <form method="post">
                                         <input type="hidden" name="csrf" value="<?= e(csrf()) ?>">
                                         <input type="hidden" name="action" value="advance_planting">
@@ -294,6 +353,7 @@ require __DIR__ . '/layout-top.php';
                                 </div>
                             <?php endforeach; ?>
                         </div>
+                        <?= $renderDashboardPagination('status_watch_page', $statusWatchPage, $statusWatchPages) ?>
                     <?php else: ?>
                         <p class="panel-empty">No plantings need a date based status update.</p>
                     <?php endif; ?>
@@ -334,7 +394,7 @@ require __DIR__ . '/layout-top.php';
         <section class="box table-card recent-harvest-panel">
             <div class="panel-heading-row">
                 <div>
-                    <p class="eyebrow">LATEST ACTIVITY</p>
+                    <p class="eyebrow">LAST SIX MONTHS</p>
                     <h2 class="title is-5">Recent harvests</h2>
                 </div>
                 <a href="<?= e(url('page=harvests')) ?>" class="button is-small is-light">
@@ -354,11 +414,12 @@ require __DIR__ . '/layout-top.php';
                     </thead>
                     <tbody>
                         <?php foreach ($recentHarvests as $harvest): ?>
+                            <?php $harvestFilterUrl = url(http_build_query(['page' => 'harvests', 'filter' => ['harvest_id' => $harvest['harvest_id']]])); ?>
                             <tr>
-                                <td><?= e(date('M j, Y', strtotime($harvest['harvest_date']))) ?></td>
-                                <td><?= e($harvest['crop_display']) ?></td>
-                                <td><?= e($harvest['farm_name']) ?></td>
-                                <td><strong><?= number_format((float) $harvest['quantity_kg'], 2) ?> kg</strong></td>
+                                <td><a href="<?= e($harvestFilterUrl) ?>"><?= e(date('M j, Y', strtotime($harvest['harvest_date']))) ?></a></td>
+                                <td><a href="<?= e($harvestFilterUrl) ?>"><?= e($harvest['crop_display']) ?></a></td>
+                                <td><a href="<?= e($harvestFilterUrl) ?>"><?= e($harvest['farm_name']) ?></a></td>
+                                <td><a href="<?= e($harvestFilterUrl) ?>"><strong><?= number_format((float) $harvest['quantity_kg'], 2) ?> kg</strong></a></td>
                             </tr>
                         <?php endforeach; ?>
 
@@ -372,6 +433,7 @@ require __DIR__ . '/layout-top.php';
                     </tbody>
                 </table>
             </div>
+            <?= $renderDashboardPagination('recent_harvest_page', $recentHarvestPage, $recentHarvestPages) ?>
         </section>
     </div>
 </section>

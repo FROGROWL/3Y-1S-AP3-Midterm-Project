@@ -357,14 +357,8 @@ foreach ($filters as $fieldKey => $value) {
 
     $source = $info['source'];
     if (str_starts_with($source, 'lookup:')) {
-        $lookup = substr($source, 7);
-        $lookupInfo = $lookupTables[$lookup];
-        $conditions[] = 'EXISTS (SELECT 1 FROM "' . $lookup . '" f WHERE f."'
-            . $lookupInfo['id'] . '" = m."' . $fieldKey . '" AND ('
-            . 'CAST(f."' . $lookupInfo['id'] . '" AS TEXT) = ? OR f."'
-            . $lookupInfo['label'] . '" ILIKE ?))';
+        $conditions[] = 'm."' . $fieldKey . '" = ?';
         $params[] = $value;
-        $params[] = '%' . $value . '%';
         continue;
     }
 
@@ -740,16 +734,35 @@ require __DIR__ . '/views/layout-top.php';
                         <input type="hidden" name="page" value="<?= e($page) ?>">
                         <div class="column is-one-quarter-desktop is-half-tablet">
                             <label class="label is-small" for="filter-primary-id">Primary ID (<?= e($primaryKey) ?>)</label>
-                            <input class="input is-small" id="filter-primary-id"
+                            <input class="input is-small" type="number" min="1" step="1" id="filter-primary-id"
                                 name="filter[<?= e($primaryKey) ?>]" value="<?= e($filters[$primaryKey] ?? '') ?>"
                                 placeholder="Enter exact ID">
                         </div>
-                        <?php foreach ($module['fields'] as [$fieldKey, $fieldLabel]): ?>
+                        <?php foreach ($module['fields'] as [$fieldKey, $fieldLabel, $fieldType]): ?>
                             <div class="column is-one-quarter-desktop is-half-tablet">
                                 <label class="label is-small" for="filter-<?= e($fieldKey) ?>"><?= e($fieldLabel) ?></label>
-                                <input class="input is-small" id="filter-<?= e($fieldKey) ?>"
-                                    name="filter[<?= e($fieldKey) ?>]" value="<?= e($filters[$fieldKey] ?? '') ?>"
-                                    placeholder="<?= e(str_contains($fieldKey, '_id') ? 'ID or name' : 'Filter value') ?>">
+                                <?php if (str_starts_with($fieldType, 'lookup:')): ?>
+                                    <div class="select is-small is-fullwidth">
+                                        <select id="filter-<?= e($fieldKey) ?>" name="filter[<?= e($fieldKey) ?>]">
+                                            <option value="">All</option>
+                                            <?php foreach ($references[$fieldKey] as $option): ?>
+                                                <option value="<?= e($option['id']) ?>" <?= (string) ($filters[$fieldKey] ?? '') === (string) $option['id'] ? 'selected' : '' ?>>
+                                                    <?= e($option['label']) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                <?php elseif ($fieldType === 'date' || $fieldType === 'computed-date'): ?>
+                                    <input class="input is-small" type="date" id="filter-<?= e($fieldKey) ?>"
+                                        name="filter[<?= e($fieldKey) ?>]" value="<?= e($filters[$fieldKey] ?? '') ?>">
+                                <?php elseif ($fieldType === 'number'): ?>
+                                    <input class="input is-small" type="number" step="any" id="filter-<?= e($fieldKey) ?>"
+                                        name="filter[<?= e($fieldKey) ?>]" value="<?= e($filters[$fieldKey] ?? '') ?>" placeholder="Exact value">
+                                <?php else: ?>
+                                    <input class="input is-small" id="filter-<?= e($fieldKey) ?>"
+                                        name="filter[<?= e($fieldKey) ?>]" value="<?= e($filters[$fieldKey] ?? '') ?>"
+                                        placeholder="<?= e(str_contains($fieldKey, '_id') ? 'ID or name' : 'Filter value') ?>">
+                                <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
                         <div class="column is-one-quarter-desktop is-half-tablet">
