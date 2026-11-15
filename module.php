@@ -554,7 +554,7 @@ require __DIR__ . '/views/layout-top.php';
             <div>
                 <p class="eyebrow">DATA MANAGEMENT</p>
                 <h1 class="title is-3"><?= e($module['title']) ?></h1>
-                <p class="subtitle is-6">Create, search, update, and remove records.</p>
+                <p class="subtitle is-6">Create, filter, update, and remove records.</p>
             </div>
         </div>
 
@@ -736,79 +736,48 @@ require __DIR__ . '/views/layout-top.php';
 
             <div class="column">
                 <div class="box table-card">
-                    <form method="get" class="field has-addons">
+                    <form method="get" class="columns is-multiline is-vcentered mb-5">
                         <input type="hidden" name="page" value="<?= e($page) ?>">
-                        <?php foreach ($filters as $filterKey => $filterValue): ?>
-                            <?php if ($filterKey !== $primaryKey): ?>
-                                <input type="hidden" name="filter[<?= e($filterKey) ?>]" value="<?= e($filterValue) ?>">
-                            <?php endif; ?>
+                        <div class="column is-one-quarter-desktop is-half-tablet">
+                            <label class="label is-small" for="filter-primary-id">Primary ID (<?= e($primaryKey) ?>)</label>
+                            <input class="input is-small" id="filter-primary-id"
+                                name="filter[<?= e($primaryKey) ?>]" value="<?= e($filters[$primaryKey] ?? '') ?>"
+                                placeholder="Enter exact ID">
+                        </div>
+                        <?php foreach ($module['fields'] as [$fieldKey, $fieldLabel]): ?>
+                            <div class="column is-one-quarter-desktop is-half-tablet">
+                                <label class="label is-small" for="filter-<?= e($fieldKey) ?>"><?= e($fieldLabel) ?></label>
+                                <input class="input is-small" id="filter-<?= e($fieldKey) ?>"
+                                    name="filter[<?= e($fieldKey) ?>]" value="<?= e($filters[$fieldKey] ?? '') ?>"
+                                    placeholder="<?= e(str_contains($fieldKey, '_id') ? 'ID or name' : 'Filter value') ?>">
+                            </div>
                         <?php endforeach; ?>
-                        <div class="control">
-                            <div class="select">
-                                <select name="sort">
+                        <div class="column is-one-quarter-desktop is-half-tablet">
+                            <label class="label is-small" for="module-sort">Order by</label>
+                            <div class="select is-small is-fullwidth">
+                                <select id="module-sort" name="sort">
                                     <?php foreach ($allowedSort as $column): ?>
-                                        <option
-                                            value="<?= e($column) ?>"
-                                            <?= $sort === $column ? 'selected' : '' ?>
-                                        >
+                                        <option value="<?= e($column) ?>" <?= $sort === $column ? 'selected' : '' ?>>
                                             <?= e(ucwords(str_replace('_', ' ', $column))) ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
                         </div>
-
-                        <div class="control">
-                            <div class="select">
-                                <select name="dir">
-                                    <option value="desc" <?= $direction === 'DESC' ? 'selected' : '' ?>>
-                                        Descending
-                                    </option>
-                                    <option value="asc" <?= $direction === 'ASC' ? 'selected' : '' ?>>
-                                        Ascending
-                                    </option>
+                        <div class="column is-one-quarter-desktop is-half-tablet">
+                            <label class="label is-small" for="module-direction">Direction</label>
+                            <div class="select is-small is-fullwidth">
+                                <select id="module-direction" name="dir">
+                                    <option value="asc" <?= $direction === 'ASC' ? 'selected' : '' ?>>Ascending</option>
+                                    <option value="desc" <?= $direction === 'DESC' ? 'selected' : '' ?>>Descending</option>
                                 </select>
                             </div>
                         </div>
-
-                        <div class="control is-expanded">
-                            <input
-                                class="input"
-                                aria-label="Filter by record ID"
-                                name="filter[<?= e($primaryKey) ?>]"
-                                placeholder="ID"
-                                value="<?= e($filters[$primaryKey] ?? '') ?>"
-                            >
-                        </div>
-
-                        <div class="control">
-                            <button class="button">Search</button>
+                        <div class="column is-full">
+                            <button class="button is-small">Apply filters</button>
+                            <a class="button is-small is-light" href="<?= e(url('page=' . $page)) ?>">Clear filters</a>
                         </div>
                     </form>
-
-                    <details class="mb-4" <?= count($filters) > 0 ? 'open' : '' ?>>
-                        <summary class="is-clickable">Filter by module fields</summary>
-                        <form method="get" class="columns is-multiline mt-2">
-                            <input type="hidden" name="page" value="<?= e($page) ?>">
-                            <input type="hidden" name="sort" value="<?= e($sort) ?>">
-                            <input type="hidden" name="dir" value="<?= e(strtolower($direction)) ?>">
-                            <?php if (!empty($filters[$primaryKey])): ?>
-                                <input type="hidden" name="filter[<?= e($primaryKey) ?>]" value="<?= e($filters[$primaryKey]) ?>">
-                            <?php endif; ?>
-                            <?php foreach ($module['fields'] as [$fieldKey, $fieldLabel]): ?>
-                                <div class="column is-one-quarter-desktop is-half-tablet">
-                                    <label class="label is-small" for="filter-<?= e($fieldKey) ?>"><?= e($fieldLabel) ?></label>
-                                    <input class="input is-small" id="filter-<?= e($fieldKey) ?>"
-                                        name="filter[<?= e($fieldKey) ?>]" value="<?= e($filters[$fieldKey] ?? '') ?>"
-                                        placeholder="<?= e(str_contains($fieldKey, '_id') ? 'ID or name' : 'Filter value') ?>">
-                                </div>
-                            <?php endforeach; ?>
-                            <div class="column is-full">
-                                <button class="button is-small">Apply filters</button>
-                                <a class="button is-small is-light" href="<?= e(url('page=' . $page)) ?>">Clear</a>
-                            </div>
-                        </form>
-                    </details>
 
                     <div class="table-container">
                         <table class="table is-fullwidth is-hoverable">

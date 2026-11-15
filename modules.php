@@ -5,7 +5,6 @@ return [
         'title' => 'Farmers',
         'table' => 'farmer',
         'pk' => 'farmer_id',
-        'search' => ['first_name', 'last_name', 'contact_number', 'address'],
         'fields' => [
             ['first_name', 'First name', 'text', true],
             ['last_name', 'Last name', 'text', true],
@@ -18,7 +17,6 @@ return [
         'title' => 'Farms',
         'table' => 'farm',
         'pk' => 'farm_id',
-        'search' => ['farm_name', 'location'],
         'fields' => [
             ['farmer_id', 'Farmer', 'ref:farmer', true],
             ['farm_name', 'Farm name', 'text', true],
@@ -32,7 +30,6 @@ return [
         'title' => 'Crop types',
         'table' => 'crop',
         'pk' => 'crop_id',
-        'search' => ['crop_name'],
         'fields' => [
             ['crop_name', 'Crop name', 'text', true],
             ['crop_category_id', 'Category', 'lookup:crop_category', false],
@@ -43,7 +40,6 @@ return [
         'singular' => 'Crop variety',
         'table' => 'crop_variety',
         'pk' => 'variety_id',
-        'search' => ['variety_name'],
         'fields' => [
             ['crop_id', 'Crop type', 'ref:crop', true],
             ['variety_name', 'Variety name', 'text', true],
@@ -55,7 +51,6 @@ return [
         'title' => 'Plantings',
         'table' => 'planting',
         'pk' => 'planting_id',
-        'search' => [],
         'fields' => [
             ['farm_id', 'Farm', 'ref:farm', true],
             ['variety_id', 'Crop variety', 'ref:crop_variety', true],
@@ -70,7 +65,6 @@ return [
         'title' => 'Harvests',
         'table' => 'harvest',
         'pk' => 'harvest_id',
-        'search' => [],
         'fields' => [
             ['planting_id', 'Planting ID', 'ref:planting', true],
             ['harvest_date', 'Harvest date', 'date', true],
