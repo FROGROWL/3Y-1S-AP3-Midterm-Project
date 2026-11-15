@@ -21,12 +21,24 @@ try {
 
         if (
             $account
-            && $account['is_active']
+            && filter_var($account['is_active'], FILTER_VALIDATE_BOOLEAN)
             && password_verify((string) ($_POST['password'] ?? ''), $account['password_hash'])
         ) {
             session_regenerate_id(true);
             unset($account['password_hash']);
             $_SESSION['user'] = $account;
+            $_SESSION['last_activity_at'] = time();
+            $_SESSION['auth_started_at'] = time();
+            $loginUpdate = db()->prepare(
+                'UPDATE app_user
+                 SET last_login_at = now(), last_activity_at = now(), signed_out_at = NULL
+                 WHERE user_id = ?'
+            );
+            $loginUpdate->execute([(int) $account['user_id']]);
+            audit('LOGIN', 'app_user', (int) $account['user_id'], [
+                'email' => $account['email'],
+                'role' => $account['role'],
+            ]);
 
             flash('success', 'Welcome back, ' . $account['full_name'] . '.');
             go('page=dashboard');
@@ -43,6 +55,15 @@ try {
         }
 
         check_csrf();
+        if ($signedInUser = user()) {
+            db()->prepare(
+                'UPDATE app_user SET signed_out_at = now()
+                 WHERE user_id = ? AND signed_out_at IS NULL'
+            )->execute([(int) $signedInUser['user_id']]);
+            audit('LOGOUT', 'app_user', (int) $signedInUser['user_id'], [
+                'reason' => 'User signed out',
+            ]);
+        }
         session_destroy();
         go('page=login');
     }
@@ -54,7 +75,7 @@ try {
 
     require_login();
 
-    if (in_array($page, ['crops', 'varieties', 'users', 'audit'], true)) {
+    if (in_array($page, ['crops', 'varieties', 'users', 'audit', 'reports'], true)) {
         require_admin();
     }
 

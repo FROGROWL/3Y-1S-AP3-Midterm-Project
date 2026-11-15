@@ -67,7 +67,6 @@ unset($_SESSION['flash']);
                         'farms' => 'Farms',
                         'plantings' => 'Plantings',
                         'harvests' => 'Harvests',
-                        'reports' => 'Reports',
                     ];
                     $adminNavigation = [
                         'farmers' => 'Farmers',

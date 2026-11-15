@@ -328,7 +328,6 @@ strong {
 
 .table-card,
 .form-card,
-.quick-box,
 .login-card,
 .box {
     border: 2px solid var(--border);
@@ -441,32 +440,6 @@ strong {
     border: 2px dashed var(--border);
     padding: 1rem;
     color: var(--muted);
-}
-
-.quick-actions-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.6rem;
-}
-
-.quick-action {
-    display: flex;
-    min-height: 4.2rem;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.35rem;
-    border: 2px solid var(--border);
-    border-left: 6px solid var(--accent-gold);
-    background: var(--surface-raised);
-    padding: 0.7rem;
-    color: var(--text);
-    font-size: 0.85rem;
-    font-weight: 800;
-}
-
-.quick-action:hover {
-    border-color: var(--accent-gold);
-    color: var(--primary);
 }
 
 .recent-harvest-panel {
@@ -781,6 +754,60 @@ strong {
     overflow: auto;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
+}
+
+.report-filters,
+.report-chart-panel {
+    border-top: 7px solid var(--accent-gold);
+}
+
+.performance-chart {
+    display: grid;
+    gap: 0.8rem;
+}
+
+.performance-chart-row {
+    display: grid;
+    grid-template-columns: minmax(8rem, 1.2fr) minmax(5rem, 3fr) minmax(5.5rem, auto);
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.performance-chart-label {
+    overflow: hidden;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.performance-chart-track {
+    height: 1rem;
+    overflow: hidden;
+    background: var(--border);
+}
+
+.performance-chart-track span {
+    display: block;
+    height: 100%;
+    min-width: 0.2rem;
+    background: var(--accent-gold);
+}
+
+.performance-chart-row strong {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.report-kpi-value {
+    font-size: clamp(1rem, 1.7vw, 1.65rem);
+}
+
+@media (max-width: 600px) {
+    .performance-chart-row {
+        grid-template-columns: minmax(5.5rem, 1fr) minmax(3rem, 2fr) minmax(4rem, auto);
+        gap: 0.45rem;
+        font-size: 0.85rem;
+    }
 }
 
 @media screen and (max-width: 1215px) {

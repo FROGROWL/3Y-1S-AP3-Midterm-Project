@@ -83,6 +83,9 @@ CREATE TABLE IF NOT EXISTS app_user (
     password_hash TEXT NOT NULL,
     role_id SMALLINT NOT NULL REFERENCES user_role(role_id),
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    last_login_at TIMESTAMPTZ,
+    last_activity_at TIMESTAMPTZ,
+    signed_out_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -172,14 +175,29 @@ CREATE TABLE IF NOT EXISTS audit_log (
 ALTER TABLE audit_log
     ADD COLUMN IF NOT EXISTS details JSONB;
 
+ALTER TABLE app_user
+    ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS last_activity_at TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS signed_out_at TIMESTAMPTZ;
+
+CREATE INDEX IF NOT EXISTS ix_app_user_current_activity
+    ON app_user (last_activity_at)
+    WHERE is_active AND signed_out_at IS NULL;
+
 CREATE INDEX IF NOT EXISTS ix_farm_farmer ON farm (farmer_id);
 CREATE INDEX IF NOT EXISTS ix_planting_farm ON planting (farm_id);
 CREATE INDEX IF NOT EXISTS ix_planting_variety ON planting (variety_id);
 CREATE INDEX IF NOT EXISTS ix_harvest_planting_date
     ON harvest (planting_id, harvest_date);
 CREATE INDEX IF NOT EXISTS ix_harvest_date ON harvest (harvest_date);
+CREATE INDEX IF NOT EXISTS ix_planting_expected_harvest_date
+    ON planting (expected_harvest_date);
+CREATE INDEX IF NOT EXISTS ix_planting_status_updated_at
+    ON planting (status_id, updated_at);
 CREATE INDEX IF NOT EXISTS ix_audit_entity
     ON audit_log (entity_type_id, entity_record_id);
+CREATE INDEX IF NOT EXISTS ix_audit_occurred_at
+    ON audit_log (occurred_at DESC, audit_id DESC);
 
 CREATE OR REPLACE FUNCTION touch_updated_at()
 RETURNS TRIGGER

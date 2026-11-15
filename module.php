@@ -16,10 +16,18 @@ if (isset($_GET['delete'])) {
     $beforeQuery = db()->prepare("SELECT * FROM \"{$table}\" WHERE \"{$primaryKey}\" = ?");
     $beforeQuery->execute([$id]);
     $before = $beforeQuery->fetch() ?: null;
-    $statement = db()->prepare("DELETE FROM \"{$table}\" WHERE \"{$primaryKey}\" = ?");
-    $statement->execute([$id]);
-
-    audit('DELETE', $table, $id, ['before' => $before]);
+    db()->beginTransaction();
+    try {
+        $statement = db()->prepare("DELETE FROM \"{$table}\" WHERE \"{$primaryKey}\" = ?");
+        $statement->execute([$id]);
+        audit('DELETE', $table, $id, ['before' => $before]);
+        db()->commit();
+    } catch (Throwable $exception) {
+        if (db()->inTransaction()) {
+            db()->rollBack();
+        }
+        throw $exception;
+    }
     flash('success', $module['title'] . ' record deleted.');
     go('page=' . $page);
 }
@@ -109,9 +117,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $chosenDate = new DateTimeImmutable($plantingDate);
         $daysToHarvest = (int) $today->diff(new DateTimeImmutable($harvestDate))->format('%r%a');
         $allowedStatuses = $chosenDate > $today
-            ? ['planted', 'cancelled']
+            ? ['planting', 'cancelled']
             : ($daysToHarvest > 20
-                ? ['planted', 'growing', 'cancelled']
+                ? ['planting', 'growing', 'cancelled']
                 : ['ready', 'harvested', 'cancelled']);
 
         if (!in_array($statusCode, $allowedStatuses, true)) {
@@ -122,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $capacityQuery = db()->prepare(
             "SELECT f.area_hectares,
                     COALESCE(SUM(p.area_planted) FILTER (
-                        WHERE ps.code IN ('planted', 'growing', 'ready')
+                        WHERE ps.code IN ('planting', 'growing', 'ready')
                     ), 0) AS used_area
              FROM farm f
              LEFT JOIN planting p
@@ -134,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $capacityQuery->execute([$id, $farmId]);
         $capacity = $capacityQuery->fetch();
 
-        $capacityToReserve = in_array($statusCode, ['planted', 'growing', 'ready'], true)
+        $capacityToReserve = in_array($statusCode, ['planting', 'growing', 'ready'], true)
             ? $areaPlanted
             : 0;
         $availableArea = max(
@@ -277,6 +285,31 @@ if ($editId) {
 }
 
 $search = trim($_GET['q'] ?? '');
+$searchFields = [
+    $primaryKey => [
+        'label' => ucwords(str_replace('_', ' ', $primaryKey)),
+        'type' => 'integer',
+    ],
+];
+foreach ($module['fields'] as [$fieldKey, $fieldLabel, $fieldType]) {
+    if ($fieldType === 'computed-date') {
+        $searchFields[$fieldKey] = ['label' => $fieldLabel, 'type' => 'date'];
+    } else {
+        $searchFields[$fieldKey] = [
+            'label' => $fieldLabel,
+            'type' => in_array($fieldType, ['text', 'email'], true)
+                ? 'text'
+                : (str_starts_with($fieldType, 'ref:') || str_starts_with($fieldType, 'lookup:')
+                    ? 'integer'
+                    : ($fieldType === 'date' ? 'date' : 'number')),
+        ];
+    }
+}
+$defaultSearchBy = $module['search'][0] ?? $primaryKey;
+$searchBy = (string) ($_GET['search_by'] ?? $defaultSearchBy);
+if (!isset($searchFields[$searchBy])) {
+    $searchBy = $primaryKey;
+}
 $sort = $_GET['sort'] ?? $primaryKey;
 $allowedSort = array_merge(
     [$primaryKey],
@@ -291,13 +324,27 @@ $direction = strtolower($_GET['dir'] ?? 'desc') === 'asc' ? 'ASC' : 'DESC';
 $where = '';
 $params = [];
 
-if ($search !== '' && $module['search']) {
-    $conditions = array_map(
-        fn ($column) => 'CAST("' . $column . '" AS TEXT) ILIKE ?',
-        $module['search']
-    );
-    $where = 'WHERE ' . implode(' OR ', $conditions);
-    $params = array_fill(0, count($conditions), '%' . $search . '%');
+if ($search !== '') {
+    $searchType = $searchFields[$searchBy]['type'];
+    if ($searchType === 'text') {
+        $where = 'WHERE "' . $searchBy . '" ILIKE ?';
+        $params[] = '%' . $search . '%';
+    } elseif ($searchType === 'integer' && !ctype_digit($search)) {
+        $where = 'WHERE FALSE';
+    } elseif ($searchType === 'number' && !is_numeric($search)) {
+        $where = 'WHERE FALSE';
+    } elseif ($searchType === 'date') {
+        $searchDate = DateTimeImmutable::createFromFormat('!Y-m-d', $search);
+        if (!$searchDate || $searchDate->format('Y-m-d') !== $search) {
+            $where = 'WHERE FALSE';
+        } else {
+            $where = 'WHERE "' . $searchBy . '" = ?';
+            $params[] = $search;
+        }
+    } else {
+        $where = 'WHERE "' . $searchBy . '" = ?';
+        $params[] = $search;
+    }
 }
 
 $countStatement = db()->prepare("SELECT COUNT(*) FROM \"{$table}\" {$where}");
@@ -390,7 +437,7 @@ if ($page === 'plantings') {
                 COALESCE(st.label, 'Not set') AS soil_type,
                 COALESCE(it.label, 'Not set') AS irrigation_type,
                 COALESCE(SUM(p.area_planted) FILTER (
-                    WHERE ps.code IN ('planted', 'growing', 'ready')
+                    WHERE ps.code IN ('planting', 'growing', 'ready')
                 ), 0) AS used_area
          FROM farm f
          LEFT JOIN soil_type st ON st.soil_type_id = f.soil_type_id
@@ -632,7 +679,14 @@ require __DIR__ . '/views/layout-top.php';
                                     </div>
                                 <?php endif; ?>
                                 <?php if ($page === 'plantings' && $key === 'farm_id'): ?>
-                                    <p class="help">Area in active planted, growing, and ready cycles is reserved from the farm total.</p>
+                                    <p class="help">Area in active planting, growing, and ready cycles is reserved from the farm total.</p>
+                                <?php endif; ?>
+                                <?php if ($page === 'harvests' && $key === 'selling_price_per_kg'): ?>
+                                    <div class="field mt-4">
+                                        <label class="label" for="estimated_harvest_total">Estimated total</label>
+                                        <input class="input" id="estimated_harvest_total" type="text" inputmode="decimal" data-harvest-estimate readonly placeholder="Enter quantity and price">
+                                        <p class="help">Quantity × selling price per kg. This is an estimate and is not saved separately.</p>
+                                    </div>
                                 <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
@@ -653,6 +707,18 @@ require __DIR__ . '/views/layout-top.php';
                 <div class="box table-card">
                     <form method="get" class="field has-addons">
                         <input type="hidden" name="page" value="<?= e($page) ?>">
+
+                        <div class="control">
+                            <div class="select">
+                                <select name="search_by" aria-label="Search field">
+                                    <?php foreach ($searchFields as $fieldKey => $fieldInfo): ?>
+                                        <option value="<?= e($fieldKey) ?>" <?= $searchBy === $fieldKey ? 'selected' : '' ?>>
+                                            <?= e($fieldInfo['label']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
 
                         <div class="control">
                             <div class="select">
@@ -776,10 +842,12 @@ require __DIR__ . '/views/layout-top.php';
                     <?php
                     $previousUrl = url('page=' . $page . '&p=' . max(1, $currentPage - 1)
                         . '&q=' . urlencode($search)
+                        . '&search_by=' . urlencode($searchBy)
                         . '&sort=' . urlencode($sort)
                         . '&dir=' . urlencode(strtolower($direction)));
                     $nextUrl = url('page=' . $page . '&p=' . min($totalPages, $currentPage + 1)
                         . '&q=' . urlencode($search)
+                        . '&search_by=' . urlencode($searchBy)
                         . '&sort=' . urlencode($sort)
                         . '&dir=' . urlencode(strtolower($direction)));
                     ?>

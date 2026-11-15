@@ -50,13 +50,35 @@ SET label = EXCLUDED.label, sort_order = EXCLUDED.sort_order;
 
 INSERT INTO planting_status (code, label, sort_order)
 VALUES
-    ('planted', 'Planted', 1),
+    ('planting', 'Planting', 1),
     ('growing', 'Growing', 2),
     ('ready', 'Ready to harvest', 3),
     ('harvested', 'Harvested', 4),
     ('cancelled', 'Cancelled', 5)
 ON CONFLICT (code) DO UPDATE
 SET label = EXCLUDED.label, sort_order = EXCLUDED.sort_order;
+
+DO $$
+DECLARE
+    old_status_id SMALLINT;
+    new_status_id SMALLINT;
+BEGIN
+    SELECT status_id INTO old_status_id
+    FROM planting_status WHERE code = 'planted';
+    SELECT status_id INTO new_status_id
+    FROM planting_status WHERE code = 'planting';
+
+    IF old_status_id IS NOT NULL AND new_status_id IS NULL THEN
+        UPDATE planting_status
+        SET code = 'planting', label = 'Planting'
+        WHERE status_id = old_status_id;
+    ELSIF old_status_id IS NOT NULL AND new_status_id IS NOT NULL THEN
+        UPDATE planting SET status_id = new_status_id
+        WHERE status_id = old_status_id;
+        DELETE FROM planting_status WHERE status_id = old_status_id;
+    END IF;
+END;
+$$;
 
 INSERT INTO harvest_remark (code, description, sort_order)
 VALUES
@@ -72,7 +94,9 @@ INSERT INTO audit_action (code, label, sort_order)
 VALUES
     ('CREATE', 'Create', 1),
     ('UPDATE', 'Update', 2),
-    ('DELETE', 'Delete', 3)
+    ('DELETE', 'Delete', 3),
+    ('LOGIN', 'Login', 4),
+    ('LOGOUT', 'Logout', 5)
 ON CONFLICT (code) DO UPDATE
 SET label = EXCLUDED.label, sort_order = EXCLUDED.sort_order;
 

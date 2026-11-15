@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const total = Number(option.dataset.farmArea || 0);
             const used = Number(option.dataset.farmUsed || 0);
             const statusCode = plantingStatusForArea?.selectedOptions[0]?.dataset.statusCode;
-            const reservedArea = ['planted', 'growing', 'ready'].includes(statusCode)
+            const reservedArea = ['planting', 'growing', 'ready'].includes(statusCode)
                 ? Number(areaInput?.value || 0)
                 : 0;
             const remaining = Math.max(0, total - used);
@@ -202,8 +202,8 @@ document.addEventListener('DOMContentLoaded', () => {
             today.setHours(0, 0, 0, 0);
             const futurePlanting = start > today;
             const daysUntilHarvest = Math.ceil((harvest - today) / 86400000);
-            const allowed = futurePlanting ? ['planted', 'cancelled']
-                : daysUntilHarvest > 20 ? ['planted', 'growing', 'cancelled']
+            const allowed = futurePlanting ? ['planting', 'cancelled']
+                : daysUntilHarvest > 20 ? ['planting', 'growing', 'cancelled']
                     : ['ready', 'harvested', 'cancelled'];
             let selectedAllowed = false;
             Array.from(statusSelect.options).forEach((option) => {
@@ -219,4 +219,30 @@ document.addEventListener('DOMContentLoaded', () => {
     varietySelect?.addEventListener('change', updatePlantingSchedule);
     plantingDate?.addEventListener('change', updatePlantingSchedule);
     updatePlantingSchedule();
+
+    const harvestQuantity = document.querySelector('#quantity_kg');
+    const sellingPrice = document.querySelector('#selling_price_per_kg');
+    const harvestEstimate = document.querySelector('[data-harvest-estimate]');
+    const updateHarvestEstimate = () => {
+        if (!harvestQuantity || !sellingPrice || !harvestEstimate) return;
+        const quantity = Number(harvestQuantity.value);
+        const price = Number(sellingPrice.value);
+        harvestEstimate.value = harvestQuantity.value !== '' && sellingPrice.value !== ''
+            && Number.isFinite(quantity) && Number.isFinite(price)
+            ? (quantity * price).toFixed(2)
+            : '';
+    };
+    harvestQuantity?.addEventListener('input', updateHarvestEstimate);
+    sellingPrice?.addEventListener('input', updateHarvestEstimate);
+    updateHarvestEstimate();
+
+    const reportScope = document.querySelector('#scope');
+    const reportGrouping = document.querySelector('#group_by');
+    const updateReportGrouping = () => {
+        if (reportScope && reportGrouping) {
+            reportGrouping.disabled = reportScope.value !== 'crops';
+        }
+    };
+    reportScope?.addEventListener('change', updateReportGrouping);
+    updateReportGrouping();
 });

@@ -1,9 +1,5 @@
 <?php
-if ((user()['role'] ?? '') === 'Administrator') {
-    require __DIR__ . '/admin-dashboard.php';
-    exit;
-}
-
+$isAdmin = (user()['role'] ?? '') === 'Administrator';
 $layoutTitle = 'Overview';
 $pdo = db();
 
@@ -17,10 +13,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'advan
          WHERE p.planting_id = ?
            AND current_status.status_id = p.status_id
            AND next_status.code = CASE current_status.code
-               WHEN 'planted' THEN 'growing'
+               WHEN 'planting' THEN 'growing'
                WHEN 'growing' THEN 'ready'
            END
-           AND ((current_status.code = 'planted' AND p.planting_date < CURRENT_DATE)
+           AND ((current_status.code = 'planting' AND p.planting_date < CURRENT_DATE)
              OR (current_status.code = 'growing'
                  AND p.planting_date <= CURRENT_DATE
                  AND p.expected_harvest_date <= CURRENT_DATE + INTERVAL '20 days'))
@@ -37,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'advan
         $afterStatus = $statusLookup->fetchColumn();
         audit('UPDATE', 'planting', (int) $advancedId, [
             'status' => [
-                'before' => $afterStatus === 'growing' ? 'planted' : 'growing',
+                'before' => $afterStatus === 'growing' ? 'planting' : 'growing',
                 'after' => $afterStatus,
             ],
         ]);
@@ -63,8 +59,16 @@ $stats['active plantings'] = (int) $pdo->query(
     "SELECT COUNT(*)
      FROM planting p
      JOIN planting_status s ON s.status_id = p.status_id
-     WHERE s.code IN ('planted', 'growing', 'ready')"
+     WHERE s.code IN ('planting', 'growing', 'ready')"
 )->fetchColumn();
+if ($isAdmin) {
+    $stats['active users'] = (int) $pdo->query(
+        "SELECT COUNT(*) FROM app_user
+         WHERE is_active
+           AND signed_out_at IS NULL
+           AND last_activity_at >= now() - INTERVAL '8 hours'"
+    )->fetchColumn();
+}
 $totalPlantings = (int) $pdo->query('SELECT COUNT(*) FROM planting')->fetchColumn();
 
 $totalHarvest = (float) $pdo
@@ -87,10 +91,10 @@ $statusWatch = $pdo->query(
      JOIN crop_variety v ON v.variety_id = p.variety_id
      JOIN crop c ON c.crop_id = v.crop_id
      JOIN farm f ON f.farm_id = p.farm_id
-     WHERE (s.code = 'planted' AND p.planting_date < CURRENT_DATE)
+     WHERE (s.code = 'planting' AND p.planting_date < CURRENT_DATE)
         OR (s.code = 'growing' AND p.planting_date <= CURRENT_DATE
             AND p.expected_harvest_date <= CURRENT_DATE + INTERVAL '20 days')
-     ORDER BY CASE WHEN s.code = 'planted' THEN 0 ELSE 1 END,
+     ORDER BY CASE WHEN s.code = 'planting' THEN 0 ELSE 1 END,
               p.expected_harvest_date NULLS LAST, p.planting_id
      LIMIT 8"
 )->fetchAll();
@@ -122,14 +126,30 @@ $recentHarvests = $pdo->query(
      LIMIT 8'
 )->fetchAll();
 
+$todayAudit = [];
+if ($isAdmin) {
+    $todayAudit = $pdo->query(
+        "SELECT log.audit_id, log.occurred_at, log.entity_record_id,
+                account.full_name, action.label AS action, entity.label AS entity
+         FROM audit_log log
+         LEFT JOIN app_user account ON account.user_id = log.user_id
+         JOIN audit_action action ON action.action_id = log.action_id
+         JOIN audit_entity entity ON entity.entity_type_id = log.entity_type_id
+         WHERE (log.occurred_at AT TIME ZONE 'Asia/Manila')::date =
+               (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Manila')::date
+         ORDER BY log.occurred_at DESC, log.audit_id DESC
+         LIMIT 10"
+    )->fetchAll();
+}
+
 require __DIR__ . '/layout-top.php';
 ?>
 <section class="hero is-small welcome">
     <div class="hero-body">
         <div class="container dashboard-hero">
             <div>
-                <p class="eyebrow">AGRIINFO / DAILY OPERATIONS</p>
-                <h1 class="title is-2">Field operations, at a glance.</h1>
+                <p class="eyebrow">AGRIINFO / <?= $isAdmin ? 'ADMINISTRATOR' : 'STAFF' ?> / DAILY OPERATIONS</p>
+                <h1 class="title is-2"><?= $isAdmin ? 'Operations and administration, at a glance.' : 'Field operations, at a glance.' ?></h1>
                 <p class="subtitle is-6">
                     <?= date('l, F j, Y') ?> &#183; Your current farm activity and harvest outlook.
                 </p>
@@ -155,7 +175,13 @@ require __DIR__ . '/layout-top.php';
 
         <div class="columns is-multiline dashboard-stats">
             <?php foreach ($stats as $label => $value): ?>
-                <?php $target = $label === 'active plantings' ? 'plantings' : $label; ?>
+                <?php
+                $target = match ($label) {
+                    'active plantings' => 'plantings',
+                    'active users' => 'users',
+                    default => $label,
+                };
+                ?>
                 <div class="column is-2">
                     <a class="box stat-card" href="<?= e(url('page=' . $target)) ?>">
                         <div class="stat-label"><?= e(ucwords($label)) ?></div>
@@ -166,12 +192,12 @@ require __DIR__ . '/layout-top.php';
             <?php endforeach; ?>
 
             <div class="column is-2">
-                <a class="box stat-card total-output" href="<?= e(url('page=reports')) ?>">
+                <a class="box stat-card total-output" href="<?= e(url('page=harvests')) ?>">
                     <div class="stat-label">Lifetime output</div>
                     <div class="stat-number">
                         <?= number_format($totalHarvest, 0) ?> <small>kg</small>
                     </div>
-                    <div class="stat-foot">Open reports <span aria-hidden="true">&#8599;</span></div>
+                    <div class="stat-foot">Open harvests <span aria-hidden="true">&#8599;</span></div>
                 </a>
             </div>
         </div>
@@ -262,7 +288,7 @@ require __DIR__ . '/layout-top.php';
                                         <input type="hidden" name="action" value="advance_planting">
                                         <input type="hidden" name="planting_id" value="<?= e($planting['planting_id']) ?>">
                                         <button class="button is-small is-primary">
-                                            Mark <?= $planting['code'] === 'planted' ? 'growing' : 'ready' ?>
+                                            Mark <?= $planting['code'] === 'planting' ? 'growing' : 'ready' ?>
                                         </button>
                                     </form>
                                 </div>
@@ -276,6 +302,34 @@ require __DIR__ . '/layout-top.php';
             </div>
 
         </div>
+
+        <?php if ($isAdmin): ?>
+            <section class="box table-card recent-harvest-panel">
+                <div class="panel-heading-row">
+                    <div>
+                        <p class="eyebrow">TODAY ONLY</p>
+                        <h2 class="title is-5">Recent audit activity</h2>
+                    </div>
+                    <a class="button is-small is-light" href="<?= e(url('page=audit')) ?>">All audit logs</a>
+                </div>
+                <div class="table-container">
+                    <table class="table is-fullwidth is-hoverable">
+                        <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Record ID</th></tr></thead>
+                        <tbody>
+                            <?php foreach ($todayAudit as $entry): ?>
+                                <tr>
+                                    <td><?= e(date('g:i:s A', strtotime($entry['occurred_at']))) ?></td>
+                                    <td><?= e($entry['full_name'] ?? 'Deleted user') ?></td>
+                                    <td><?= e($entry['action'] . ' · ' . $entry['entity']) ?></td>
+                                    <td>#<?= e($entry['entity_record_id'] ?? '—') ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                            <?php if (!$todayAudit): ?><tr><td colspan="4" class="has-text-grey">No audit activity recorded today.</td></tr><?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        <?php endif; ?>
 
         <section class="box table-card recent-harvest-panel">
             <div class="panel-heading-row">
