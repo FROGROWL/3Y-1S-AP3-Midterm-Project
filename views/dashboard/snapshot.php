@@ -11,10 +11,11 @@
                     'active users' => 'users',
                     default => $label,
                 };
+                $displayLabel = $label === 'active plantings' ? 'Plantings' : ucwords($label);
                 ?>
                 <div class="column is-2">
                     <a class="box stat-card" href="<?= e(url('page=' . $target)) ?>">
-                        <div class="stat-label"><?= e(ucwords($label)) ?></div>
+                        <div class="stat-label"><?= e($displayLabel) ?></div>
                         <div class="stat-number"><?= number_format($value) ?></div>
                         <div class="stat-foot">Open records <span aria-hidden="true">&#8599;</span></div>
                     </a>
