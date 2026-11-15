@@ -25,6 +25,7 @@ This guide shows where to make changes without having to read a large all-purpos
 ### Shared module files
 
 - `includes/modules/delete.php`: deletes the selected record and records the audit event.
+- `includes/modules/delete-support.php`: builds readable record snapshots, counts cascade effects, and checks deletion restrictions for confirmation dialogs and audit details.
 - `includes/modules/save.php`: coordinates save validation and persistence.
 - `includes/modules/save/validate-fields.php`: checks required fields and basic input formats.
 - `includes/modules/save/validate-planting.php`: calculates harvest dates and checks planting status and farm capacity.
@@ -36,7 +37,7 @@ This guide shows where to make changes without having to read a large all-purpos
 ## Front-end responsibilities
 
 - `assets/css/`: theme tokens and styles grouped by base, navigation, dashboard layout and panels, components, forms, modules, reports, and responsive layout.
-- `assets/js/`: theme toggle, mobile navigation, planting form behavior, harvest form behavior, and report behavior.
+- `assets/js/`: theme toggle, mobile navigation, shared confirmation/audit dialogs and notices, planting form behavior, harvest form behavior, and report behavior.
 - `assets/app.css`, `assets/app.js`: small entry files that import the feature files.
 
 The JavaScript entry is loaded as an ES module so the browser can resolve its imports.
