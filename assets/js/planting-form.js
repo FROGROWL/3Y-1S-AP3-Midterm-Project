@@ -119,37 +119,67 @@ const initializePlantingForm = () => {
     const plantingDate = document.querySelector('#planting_date');
     const expectedDate = document.querySelector('[data-expected-harvest-date]');
     const statusSelect = document.querySelector('[data-planting-status-select]');
+    const plantingForm = document.querySelector('[data-planting-form]');
+    const statusOverride = plantingForm?.querySelector('[name="confirm_status_override"]');
+    const allowedStatusesForDates = () => {
+        const days = Number(varietySelect?.selectedOptions[0]?.dataset.growingDays || 0);
+        const start = plantingDate?.value ? new Date(`${plantingDate.value}T00:00:00`) : null;
+        if (!days || !start || Number.isNaN(start.getTime())) return null;
+
+        const harvest = new Date(start);
+        harvest.setDate(harvest.getDate() + days);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const futurePlanting = start > today;
+        const daysUntilHarvest = Math.ceil((harvest - today) / 86400000);
+        return futurePlanting ? ['Planting', 'Cancelled']
+            : daysUntilHarvest > 20 ? ['Planting', 'Growing', 'Cancelled']
+                : ['Ready to harvest', 'Harvested', 'Cancelled'];
+    };
     const updatePlantingSchedule = () => {
         if (!varietySelect || !plantingDate || !expectedDate) return;
         const days = Number(varietySelect.selectedOptions[0]?.dataset.growingDays || 0);
         const start = plantingDate.value ? new Date(`${plantingDate.value}T00:00:00`) : null;
         if (!days || !start || Number.isNaN(start.getTime())) {
             expectedDate.value = '';
-            if (statusSelect) statusSelect.disabled = true;
+            statusSelect?.querySelectorAll('option').forEach((option) => {
+                option.hidden = false;
+                option.disabled = false;
+            });
+            if (statusSelect) statusSelect.disabled = false;
             return;
         }
         const harvest = new Date(start);
         harvest.setDate(harvest.getDate() + days);
         expectedDate.value = `${harvest.getFullYear()}-${String(harvest.getMonth() + 1).padStart(2, '0')}-${String(harvest.getDate()).padStart(2, '0')}`;
         if (statusSelect) {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const futurePlanting = start > today;
-            const daysUntilHarvest = Math.ceil((harvest - today) / 86400000);
-            const allowed = futurePlanting ? ['Planting', 'Cancelled']
-                : daysUntilHarvest > 20 ? ['Planting', 'Growing', 'Cancelled']
-                    : ['Ready to harvest', 'Harvested', 'Cancelled'];
-            let selectedAllowed = false;
             Array.from(statusSelect.options).forEach((option) => {
-                const visible = !option.value || allowed.includes(option.dataset.statusCode);
-                option.hidden = !visible;
-                option.disabled = !visible;
-                if (option.selected && visible) selectedAllowed = true;
+                option.hidden = false;
+                option.disabled = false;
             });
-            if (!selectedAllowed) statusSelect.value = '';
             statusSelect.disabled = false;
         }
     };
+    plantingForm?.addEventListener('submit', (event) => {
+        if (!statusSelect || !statusOverride) return;
+
+        const selectedStatus = statusSelect.selectedOptions[0];
+        const allowed = allowedStatusesForDates();
+        const isAllowed = !selectedStatus?.value || !allowed
+            || allowed.includes(selectedStatus.dataset.statusCode);
+        statusOverride.value = '0';
+        if (isAllowed) return;
+
+        const confirmed = window.confirm(
+            `The selected status “${selectedStatus.textContent.trim()}” is outside the date-based guideline. `
+            + `For these dates, the suggested choices are: ${allowed.join(', ')}. Save this status anyway?`,
+        );
+        if (!confirmed) {
+            event.preventDefault();
+            return;
+        }
+        statusOverride.value = '1';
+    });
     varietySelect?.addEventListener('change', updatePlantingSchedule);
     plantingDate?.addEventListener('change', updatePlantingSchedule);
     updatePlantingSchedule();

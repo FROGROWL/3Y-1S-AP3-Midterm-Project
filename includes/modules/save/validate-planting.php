@@ -35,8 +35,11 @@
                 ? ['Planting', 'Growing', 'Cancelled']
                 : ['Ready to harvest', 'Harvested', 'Cancelled']);
 
-        if (!in_array($statusCode, $allowedStatuses, true)) {
-            flash('danger', 'The selected status does not match the planting and expected harvest dates.');
+        if (
+            !in_array($statusCode, $allowedStatuses, true)
+            && ($_POST['confirm_status_override'] ?? '') !== '1'
+        ) {
+            flash('danger', 'Confirm the date-based status override before saving this planting.');
             go('page=' . $page . ($id ? '&edit=' . $id : ''));
         }
 

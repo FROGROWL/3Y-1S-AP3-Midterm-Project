@@ -6,8 +6,11 @@
                         <?= e($module['singular'] ?? rtrim($module['title'], 's')) ?>
                     </h2>
 
-                    <form method="post">
+                    <form method="post" <?= $page === 'plantings' ? 'data-planting-form' : '' ?>>
                         <input type="hidden" name="csrf" value="<?= e(csrf()) ?>">
+                        <?php if ($page === 'plantings'): ?>
+                            <input type="hidden" name="confirm_status_override" value="0">
+                        <?php endif; ?>
                         <input
                             type="hidden"
                             name="id"
@@ -156,7 +159,6 @@
                                     <div class="field mt-4">
                                         <label class="label" for="estimated_harvest_total">Estimated total</label>
                                         <input class="input" id="estimated_harvest_total" type="text" inputmode="decimal" data-harvest-estimate readonly placeholder="Enter quantity and price">
-                                        <p class="help">Quantity × selling price per kg. This is an estimate and is not saved separately.</p>
                                     </div>
                                 <?php endif; ?>
                             </div>
@@ -174,4 +176,4 @@
                 </div>
             </div>
 
-            
+

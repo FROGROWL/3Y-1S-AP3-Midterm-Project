@@ -107,6 +107,23 @@
     color: var(--text);
 }
 
+.pagination .pagination-previous,
+.pagination .pagination-next {
+    color: var(--text) !important;
+    font-weight: 700;
+    opacity: 1;
+}
+
+.pagination .pagination-previous[disabled],
+.pagination .pagination-next[disabled],
+.pagination .pagination-previous[aria-disabled="true"],
+.pagination .pagination-next[aria-disabled="true"] {
+    background: var(--surface-raised);
+    color: var(--muted) !important;
+    cursor: not-allowed;
+    opacity: 1;
+}
+
 .pagination-list {
     color: var(--muted);
 }
@@ -116,6 +133,11 @@
 .pagination-previous:hover {
     border-color: var(--primary);
     color: var(--primary);
+}
+
+.pagination .pagination-previous:hover:not([disabled]):not([aria-disabled="true"]),
+.pagination .pagination-next:hover:not([disabled]):not([aria-disabled="true"]) {
+    color: var(--primary) !important;
 }
 
 .theme-toggle {

@@ -61,9 +61,6 @@ require __DIR__ . '/layout-top.php';
             <button class="button is-primary is-fullwidth mt-3">Sign in</button>
         </form>
 
-        <p class="is-size-7 has-text-grey mt-5">
-            Administrator accounts are created by the installation script.
-        </p>
     </section>
 </main>
 <?php require __DIR__ . '/layout-bottom.php'; ?>
