@@ -126,7 +126,7 @@ In pgAdmin, register a server with the same Supabase host, port, database, usern
 - `install.php`, `sql/`: database installation and demo data.
 - `includes/`: feature-specific actions and data preparation; `views/`: page templates and smaller view partials.
 - `assets/`: feature-organized CSS and JavaScript, loaded through small entry files.
-- `docs/`: normalization, data dictionary, verification notes, and the [code structure guide](docs/code-structure.md).
+- `docs/`: [system documentation](docs/system-documentation.md), normalization, data dictionary, verification notes, and the [code structure guide](docs/code-structure.md).
 
 For data relationships and normalization, see [docs/normalization.md](docs/normalization.md). For the table columns, see [docs/data-dictionary.md](docs/data-dictionary.md).
 

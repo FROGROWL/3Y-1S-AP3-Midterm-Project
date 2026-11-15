@@ -70,12 +70,6 @@ CREATE TABLE IF NOT EXISTS audit_entity (
     sort_order SMALLINT NOT NULL DEFAULT 0
 );
 
-CREATE TABLE IF NOT EXISTS schema_migrations (
-    version VARCHAR(100) PRIMARY KEY,
-    description TEXT NOT NULL,
-    applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
 CREATE TABLE IF NOT EXISTS app_user (
     user_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     full_name VARCHAR(120) NOT NULL,

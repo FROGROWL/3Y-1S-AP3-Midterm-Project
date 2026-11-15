@@ -48,12 +48,6 @@ CREATE TABLE IF NOT EXISTS audit_entity (
     label VARCHAR(80) NOT NULL UNIQUE,
     sort_order SMALLINT NOT NULL DEFAULT 0
 );
-CREATE TABLE IF NOT EXISTS schema_migrations (
-    version VARCHAR(100) PRIMARY KEY,
-    description TEXT NOT NULL,
-    applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
 INSERT INTO soil_type (code, label)
 SELECT 'legacy_' || substr(md5(value), 1, 12), value
 FROM (SELECT DISTINCT btrim(soil_type) AS value FROM farm WHERE nullif(btrim(soil_type), '') IS NOT NULL) values_to_add
@@ -251,8 +245,5 @@ ALTER TABLE audit_log ADD CONSTRAINT audit_log_action_id_fkey
     FOREIGN KEY (action_id) REFERENCES audit_action(action_id);
 ALTER TABLE audit_log ADD CONSTRAINT audit_log_entity_type_id_fkey
     FOREIGN KEY (entity_type_id) REFERENCES audit_entity(entity_type_id);
-
-INSERT INTO schema_migrations (version, description)
-VALUES ('001_integer_lookup_normalization', 'Normalize varieties and replace controlled text fields with integer foreign keys');
 
 COMMIT;
