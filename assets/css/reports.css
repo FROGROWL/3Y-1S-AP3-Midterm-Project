@@ -8,8 +8,16 @@
     gap: 0.8rem;
 }
 
+.performance-chart.is-scrollable {
+    max-height: 28.25rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 0.5rem;
+}
+
 .performance-chart-row {
     display: grid;
+    min-height: 2.1rem;
     grid-template-columns: minmax(8rem, 1.2fr) minmax(5rem, 3fr) minmax(5.5rem, auto);
     align-items: center;
     gap: 0.8rem;

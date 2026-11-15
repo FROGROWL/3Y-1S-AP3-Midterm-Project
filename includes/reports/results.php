@@ -8,6 +8,30 @@ $projectedGross = 0.0;
 $cancelledPlantings = 0;
 
 if (!$dateError) {
+    if ($scope === 'farms') {
+        $farmSql = 'SELECT farm_id AS group_id, farm_name AS label FROM farm';
+        if ($farmId !== null) {
+            $farmSql .= ' WHERE farm_id = ?';
+        }
+        $farmSql .= ' ORDER BY farm_name';
+        $farmStatement = $pdo->prepare($farmSql);
+        $farmStatement->execute($farmId !== null ? [$farmId] : []);
+        foreach ($farmStatement->fetchAll() as $farmRow) {
+            $results[(string) $farmRow['group_id']] = [
+                'group_id' => $farmRow['group_id'],
+                'label' => $farmRow['label'],
+                'harvest_count' => 0,
+                'total_kg' => 0.0,
+                'average_kg' => 0.0,
+                'gross_value' => 0.0,
+                'quality_score' => 0.0,
+                'cancelled_count' => 0,
+                'forecast_kg' => 0.0,
+                'forecast_gross' => 0.0,
+            ];
+        }
+    }
+
     $actual = $pdo->prepare(
         "SELECT {$dimension['id']} AS group_id, {$dimension['label']} AS label,
                 COUNT(h.harvest_id) AS harvest_count,
