@@ -160,8 +160,9 @@ const initializePlantingForm = () => {
             statusSelect.disabled = false;
         }
     };
-    plantingForm?.addEventListener('submit', (event) => {
+    plantingForm?.addEventListener('submit', async (event) => {
         if (!statusSelect || !statusOverride) return;
+        if (statusOverride.value === '1') return;
 
         const selectedStatus = statusSelect.selectedOptions[0];
         const allowed = allowedStatusesForDates();
@@ -170,15 +171,19 @@ const initializePlantingForm = () => {
         statusOverride.value = '0';
         if (isAllowed) return;
 
-        const confirmed = window.confirm(
-            `The selected status “${selectedStatus.textContent.trim()}” is outside the date-based guideline. `
-            + `For these dates, the suggested choices are: ${allowed.join(', ')}. Save this status anyway?`,
-        );
+        event.preventDefault();
+        const confirmed = await window.showAppConfirm({
+            title: 'Confirm planting status',
+            message: `“${selectedStatus.textContent.trim()}” is outside the date-based guideline.`,
+            impact: `Suggested choices for these dates: ${allowed.join(', ')}.`,
+            confirmLabel: 'Save status',
+            danger: false,
+        });
         if (!confirmed) {
-            event.preventDefault();
             return;
         }
         statusOverride.value = '1';
+        plantingForm.requestSubmit();
     });
     varietySelect?.addEventListener('change', updatePlantingSchedule);
     plantingDate?.addEventListener('change', updatePlantingSchedule);

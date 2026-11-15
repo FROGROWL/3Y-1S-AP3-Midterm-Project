@@ -119,10 +119,9 @@ unset($_SESSION['flash']);
 <?php endif; ?>
 
 <?php if ($notice): ?>
-    <div class="container notice">
-        <div class="notification is-<?= e($notice[0]) ?> is-light">
-            <?= e($notice[1]) ?>
-        </div>
+    <div class="app-notice notification is-<?= e($notice[0]) ?>" role="<?= $notice[0] === 'danger' ? 'alert' : 'status' ?>" aria-live="polite" data-app-notice data-notice-type="<?= e($notice[0]) ?>">
+        <div><strong><?= $notice[0] === 'danger' ? 'Error' : ucfirst(e($notice[0])) ?></strong><p><?= e($notice[1]) ?></p></div>
+        <button class="delete" type="button" aria-label="Dismiss notification" data-notice-close></button>
     </div>
 <?php endif; ?>
 <div id="page-content">

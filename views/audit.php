@@ -78,12 +78,19 @@ require __DIR__ . '/layout-top.php';
                     <thead><tr><th>Date and time</th><th>User</th><th>Action / module</th><th>Change details</th></tr></thead>
                     <tbody>
                         <?php foreach ($logs as $log): ?>
-                            <?php $summary = $changeSummary($log); ?>
+                            <?php $summary = $changeSummary($log); $detailPayload = $decodeDetails($log['details']); ?>
                             <tr>
                                 <td><?= e((new DateTimeImmutable($log['occurred_at']))->setTimezone(new DateTimeZone('Asia/Manila'))->format('M j, Y g:i:s A')) ?></td>
                                 <td><?= e($log['full_name'] ?? 'Deleted user') ?><br><small><?= e($log['email'] ?? '') ?></small></td>
-                                <td><?= e($log['action'] . ' · ' . $log['entity']) ?></td>
-                                <td><?= $summary !== '' ? e($summary) : '<span class="has-text-grey">—</span>' ?></td>
+                                <td><?= e($log['action'] . ' Â· ' . $log['entity']) ?></td>
+                                <td>
+                                    <?= $summary !== '' ? e($summary) : '<span class="has-text-grey">—</span>' ?>
+                                    <?php if ($detailPayload): ?>
+                                        <button class="button is-small is-light ml-2" type="button" data-audit-open
+                                            data-audit-title="<?= e($log['action'] . ' - ' . $log['entity'] . ' details') ?>"
+                                            data-audit-details="<?= e(json_encode($detailPayload, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)) ?>">View details</button>
+                                    <?php endif; ?>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                         <?php if (!$logs): ?><tr><td colspan="4" class="has-text-centered">No audit events found.</td></tr><?php endif; ?>
@@ -96,7 +103,7 @@ require __DIR__ . '/layout-top.php';
                 <?php $nextQuery = $pageQuery + ['p' => min($totalPages, $pageNumber + 1)]; ?>
                 <a class="pagination-previous" href="<?= e(url(http_build_query($previousQuery))) ?>" <?= $pageNumber <= 1 ? 'disabled' : '' ?>>Previous</a>
                 <a class="pagination-next" href="<?= e(url(http_build_query($nextQuery))) ?>" <?= $pageNumber >= $totalPages ? 'disabled' : '' ?>>Next</a>
-                <span class="pagination-list">Page <?= $pageNumber ?> of <?= $totalPages ?> · <?= number_format($total) ?> events</span>
+                <span class="pagination-list">Page <?= $pageNumber ?> of <?= $totalPages ?> Â· <?= number_format($total) ?> events</span>
             </nav>
             <?php endif; ?>
         </div>

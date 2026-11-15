@@ -32,7 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($userId) {
             $beforeQuery = $pdo->prepare(
                 'SELECT app_user.user_id, app_user.full_name, app_user.email,
-                        app_user.role_id, user_role.code AS role, app_user.is_active
+                        app_user.role_id, user_role.code AS role, app_user.is_active,
+                        app_user.created_at, app_user.updated_at, app_user.last_login_at
                  FROM app_user JOIN user_role ON user_role.role_id = app_user.role_id
                  WHERE app_user.user_id = ?'
             );
@@ -55,7 +56,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->prepare($sql)->execute($values);
             $afterQuery = $pdo->prepare(
                 'SELECT app_user.user_id, app_user.full_name, app_user.email,
-                        app_user.role_id, user_role.code AS role, app_user.is_active
+                        app_user.role_id, user_role.code AS role, app_user.is_active,
+                        app_user.created_at, app_user.updated_at, app_user.last_login_at
                  FROM app_user JOIN user_role ON user_role.role_id = app_user.role_id
                  WHERE app_user.user_id = ?'
             );
@@ -73,13 +75,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $insert->execute([$name, $email, password_hash($password, PASSWORD_DEFAULT), $roleId]);
             $newUserId = (int) $insert->fetchColumn();
+            $createdQuery = $pdo->prepare(
+                'SELECT app_user.user_id, app_user.full_name, app_user.email,
+                        user_role.code AS role, app_user.is_active, app_user.created_at,
+                        app_user.updated_at, app_user.last_login_at
+                 FROM app_user JOIN user_role ON user_role.role_id = app_user.role_id
+                 WHERE app_user.user_id = ?'
+            );
+            $createdQuery->execute([$newUserId]);
             audit('CREATE', 'app_user', $newUserId, [
-                'after' => [
-                    'full_name' => $name,
-                    'email' => $email,
-                    'role' => $roleLabel,
-                    'is_active' => true,
-                ],
+                'after' => $createdQuery->fetch(),
             ]);
             flash('success', 'User account created.');
         }

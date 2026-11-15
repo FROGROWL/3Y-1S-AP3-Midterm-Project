@@ -27,13 +27,6 @@ require __DIR__ . '/layout-top.php';
         <h1 class="title is-3 mt-2">Welcome back</h1>
         <p class="has-text-grey mb-5">Sign in to manage your agricultural records.</p>
 
-        <?php if ($notice = $_SESSION['flash'] ?? null): ?>
-            <?php unset($_SESSION['flash']); ?>
-            <div class="notification is-<?= e($notice[0]) ?> is-light">
-                <?= e($notice[1]) ?>
-            </div>
-        <?php endif; ?>
-
         <form method="post">
             <input type="hidden" name="csrf" value="<?= e(csrf()) ?>">
             <div class="field">

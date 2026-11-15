@@ -3,11 +3,7 @@
 
     try {
         if ($id) {
-            $beforeQuery = db()->prepare(
-                "SELECT * FROM \"{$table}\" WHERE \"{$primaryKey}\" = ?"
-            );
-            $beforeQuery->execute([$id]);
-            $before = $beforeQuery->fetch() ?: null;
+            $before = moduleDeleteSnapshot($table, $id);
             $assignments = implode(
                 ', ',
                 array_map(fn ($column) => '"' . $column . '" = ?', array_keys($data))
@@ -22,13 +18,9 @@
             );
             $statement->execute($values);
 
-            $afterQuery = db()->prepare(
-                "SELECT * FROM \"{$table}\" WHERE \"{$primaryKey}\" = ?"
-            );
-            $afterQuery->execute([$id]);
             audit('UPDATE', $table, $id, [
                 'before' => $before,
-                'after' => $afterQuery->fetch() ?: $data,
+                'after' => moduleDeleteSnapshot($table, $id) ?: $data,
             ]);
             flash('success', $module['title'] . ' updated.');
         } else {
@@ -45,13 +37,10 @@
             );
             $statement->execute(array_values($data));
             $newId = (int) $statement->fetchColumn();
-            $afterQuery = db()->prepare(
-                "SELECT * FROM \"{$table}\" WHERE \"{$primaryKey}\" = ?"
-            );
-            $afterQuery->execute([$newId]);
-            $createdRecord = $afterQuery->fetch() ?: $data;
+            $createdRecord = moduleDeleteSnapshot($table, $newId) ?: $data;
 
             if ($page === 'harvests') {
+                $plantingBefore = moduleDeleteSnapshot('planting', (int) $data['planting_id']);
                 $harvestedStatus = db()->prepare(
                     "UPDATE planting
                      SET status_id = (SELECT status_id FROM planting_status WHERE lower(code) = 'harvested'),
@@ -65,7 +54,8 @@
                     throw new DomainException('That planting is no longer ready for harvest.');
                 }
                 audit('UPDATE', 'planting', (int) $data['planting_id'], [
-                    'status' => ['before' => 'Ready to harvest', 'after' => 'Harvested'],
+                    'before' => $plantingBefore,
+                    'after' => moduleDeleteSnapshot('planting', (int) $data['planting_id']),
                 ]);
             }
 

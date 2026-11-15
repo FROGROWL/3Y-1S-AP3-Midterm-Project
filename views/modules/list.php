@@ -79,6 +79,21 @@
                             </thead>
                             <tbody>
                                 <?php foreach ($rows as $row): ?>
+                                    <?php
+                                    $deleteImpact = $deleteImpacts[(string) $row[$primaryKey]] ?? [];
+                                    $deleteLabel = match ($table) {
+                                        'farmer' => trim(($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? '')),
+                                        'farm' => $row['farm_name'] ?? 'Farm',
+                                        'crop' => $row['crop_name'] ?? 'Crop type',
+                                        'crop_variety' => $row['variety_name'] ?? 'Crop variety',
+                                        default => $module['singular'] ?? rtrim($module['title'], 's'),
+                                    };
+                                    $impactParts = [];
+                                    foreach ($deleteImpact as $impactName => $impactCount) {
+                                        if ($impactCount > 0) $impactParts[] = number_format($impactCount) . ' ' . $impactName;
+                                    }
+                                    $deleteBlocked = moduleDeleteBlocked($table, $deleteImpact);
+                                    ?>
                                     <tr>
                                         <td><?= e($row[$primaryKey]) ?></td>
                                         <?php foreach ($module['fields'] as [$key, $label, $type]): ?>
@@ -116,9 +131,15 @@
                                             <form
                                                 method="post"
                                                 action="<?= e(url('page=' . $page . '&delete=1')) ?>"
-                                                onsubmit="return confirm('Delete this record? Related records may also be deleted.');"
+                                                data-app-confirm
+                                                data-confirm-title="Delete <?= e($deleteLabel) ?>?"
+                                                data-confirm-message="You are about to permanently delete <?= e($deleteLabel) ?> (<?= e($moduleName) ?> ID <?= e($row[$primaryKey]) ?>)."
+                                                data-confirm-impact="<?= $deleteBlocked ? 'Deletion is blocked because ' . number_format($deleteImpact['plantings'] ?? 0) . ' planting records use this record. Delete those plantings first.' : ($impactParts ? 'This will also permanently delete ' . e(implode(', ', $impactParts)) . '.' : 'No related records will be deleted.') ?>"
+                                                data-confirm-label="Delete permanently"
+                                                data-confirm-blocked="<?= $deleteBlocked ? '1' : '0' ?>"
                                             >
                                                 <input type="hidden" name="csrf" value="<?= e(csrf()) ?>">
+                                                <input type="hidden" name="confirm_delete" value="0">
                                                 <input
                                                     type="hidden"
                                                     name="id"

@@ -110,4 +110,8 @@ $listStatement = db()->prepare(
 );
 $listStatement->execute($params);
 $rows = $listStatement->fetchAll();
+$deleteImpacts = [];
+foreach ($rows as $row) {
+    $deleteImpacts[(string) $row[$primaryKey]] = moduleDeleteImpact($table, (int) $row[$primaryKey]);
+}
 
