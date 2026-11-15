@@ -1,0 +1,104 @@
+:root,
+:root[data-theme="light"] {
+    color-scheme: light;
+    --page-bg: #fffdf5;
+    --surface: #ffffff;
+    --surface-raised: #fff5d2;
+    --text: #1b2733;
+    --muted: #465665;
+    --subtle: #354657;
+    --border: #d8c783;
+    --primary: #765700;
+    --primary-hover: #5d4300;
+    --focus: #765700;
+    --button-text: #1b2733;
+    --success: #176b4d;
+    --danger: #a12b24;
+    --warning: #765000;
+    --accent-blue: #0072b2;
+    --accent-orange: #c45b00;
+    --accent-teal: #007a5e;
+    --accent-purple: #76528b;
+    --accent-gold: #f0bd00;
+    --chart-track: #91834e;
+    --welcome-bg: #f0bd00;
+    --card-blue: color-mix(in srgb, var(--accent-blue) 13%, var(--surface));
+    --card-orange: color-mix(in srgb, var(--accent-orange) 13%, var(--surface));
+    --card-teal: color-mix(in srgb, var(--accent-teal) 13%, var(--surface));
+    --card-purple: color-mix(in srgb, var(--accent-purple) 13%, var(--surface));
+    --card-gold: color-mix(in srgb, var(--accent-gold) 13%, var(--surface));
+    --card-rose: color-mix(in srgb, var(--danger) 13%, var(--surface));
+
+    --bulma-body-background-color: var(--page-bg);
+    --bulma-body-color: var(--text);
+    --bulma-text: var(--text);
+    --bulma-text-strong: var(--text);
+    --bulma-title-color: var(--text);
+    --bulma-subtitle-color: var(--muted);
+    --bulma-strong-color: var(--text);
+    --bulma-border: var(--border);
+    --bulma-background: var(--surface);
+    --bulma-link-text: var(--primary);
+    --bulma-link: var(--primary);
+    --bulma-primary: var(--primary);
+    --bulma-input-color: var(--text);
+    --bulma-input-background-color: var(--surface);
+    --bulma-input-border-color: var(--border);
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --page-bg: #111923;
+    --surface: #1b2632;
+    --surface-raised: #273544;
+    --text: #f2f6f9;
+    --muted: #c2ced8;
+    --subtle: #aebdca;
+    --border: #455767;
+    --primary: #ffdf70;
+    --primary-hover: #ffe99f;
+    --focus: #f0e442;
+    --button-text: #1b2632;
+    --success: #72d6a7;
+    --danger: #ff938b;
+    --warning: #f2cf62;
+    --accent-blue: #56b4e9;
+    --accent-orange: #e69f00;
+    --accent-teal: #42c7a0;
+    --accent-purple: #c7a0e3;
+    --accent-gold: #ffd43b;
+    --chart-track: #526271;
+    --welcome-bg: #5e4b0c;
+    --card-blue: color-mix(in srgb, var(--accent-blue) 24%, var(--surface));
+    --card-orange: color-mix(in srgb, var(--accent-orange) 24%, var(--surface));
+    --card-teal: color-mix(in srgb, var(--accent-teal) 24%, var(--surface));
+    --card-purple: color-mix(in srgb, var(--accent-purple) 24%, var(--surface));
+    --card-gold: color-mix(in srgb, var(--accent-gold) 24%, var(--surface));
+    --card-rose: color-mix(in srgb, var(--danger) 24%, var(--surface));
+
+    --bulma-body-background-color: var(--page-bg);
+    --bulma-body-color: var(--text);
+    --bulma-text: var(--text);
+    --bulma-text-strong: var(--text);
+    --bulma-title-color: var(--text);
+    --bulma-subtitle-color: var(--muted);
+    --bulma-strong-color: var(--text);
+    --bulma-border: var(--border);
+    --bulma-background: var(--surface);
+    --bulma-link-text: var(--primary);
+    --bulma-link: var(--primary);
+    --bulma-primary: var(--accent-gold);
+    --bulma-input-color: var(--text);
+    --bulma-input-background-color: var(--surface);
+    --bulma-input-border-color: var(--border);
+}
+
+:root[data-theme="light"] .notification.is-success.is-light,
+:root[data-theme="light"] .notification.is-danger.is-light,
+:root[data-theme="light"] .notification.is-info.is-light,
+:root[data-theme="dark"] .notification.is-success.is-light,
+:root[data-theme="dark"] .notification.is-danger.is-light,
+:root[data-theme="dark"] .notification.is-info.is-light {
+    background: var(--surface);
+    color: var(--text);
+}

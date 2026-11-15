@@ -1,0 +1,105 @@
+.table {
+    background: var(--surface);
+    color: var(--text);
+}
+
+.table thead,
+.table tfoot {
+    background: var(--surface-raised);
+}
+
+.table thead th {
+    border-bottom: 2px solid var(--border);
+    color: var(--muted);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.table td,
+.table th {
+    border-color: var(--border);
+    color: inherit;
+}
+
+.table.is-hoverable tbody tr:not(.is-selected):hover {
+    background: var(--surface-raised);
+}
+
+.table.is-striped tbody tr:not(.is-selected):nth-child(even) {
+    background: color-mix(in srgb, var(--surface-raised) 65%, var(--surface));
+}
+
+.actions {
+    display: flex;
+    gap: 0.35rem;
+}
+
+.actions form {
+    display: inline;
+}
+
+.quick-link {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--primary);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.quick-link:last-child {
+    border: 0;
+}
+
+.app-footer {
+    padding: 2rem 1.5rem;
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.8rem;
+}
+
+.notice {
+    margin-top: 1rem;
+}
+
+.notification {
+    border: 1px solid var(--border);
+    border-left-width: 5px;
+    background: var(--surface);
+    color: var(--text);
+}
+
+.notification.is-success {
+    border-left-color: var(--success);
+    color: var(--text);
+}
+
+.notification.is-success::before {
+    content: "Success: ";
+    color: var(--success);
+    font-weight: 700;
+}
+
+.notification.is-danger {
+    border-left-color: var(--danger);
+    color: var(--text);
+}
+
+.notification.is-danger::before {
+    content: "Error: ";
+    color: var(--danger);
+    font-weight: 700;
+}
+
+.notification.is-info {
+    border-left-color: var(--primary);
+    color: var(--text);
+}
+
+.notification.is-info::before {
+    content: "Info: ";
+    color: var(--primary);
+    font-weight: 700;
+}

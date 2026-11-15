@@ -122,11 +122,11 @@ In pgAdmin, register a server with the same Supabase host, port, database, usern
 ## Project layout
 
 - `index.php`, `module.php`, `modules.php`: request routing and shared module pages.
-- `bootstrap.php`, `Database.php`: environment loading, sessions, and PDO connection.
+- `bootstrap.php`, `includes/core/`, `Database.php`: startup, environment loading, shared helpers, and PDO connection.
 - `install.php`, `sql/`: database installation and demo data.
-- `views/`: page templates.
-- `assets/`: styles and navigation script.
-- `docs/`: normalization, data dictionary, and verification notes.
+- `includes/`: feature-specific actions and data preparation; `views/`: page templates and smaller view partials.
+- `assets/`: feature-organized CSS and JavaScript, loaded through small entry files.
+- `docs/`: normalization, data dictionary, verification notes, and the [code structure guide](docs/code-structure.md).
 
 For data relationships and normalization, see [docs/normalization.md](docs/normalization.md). For the table columns, see [docs/data-dictionary.md](docs/data-dictionary.md).
 

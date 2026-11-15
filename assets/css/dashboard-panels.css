@@ -1,0 +1,109 @@
+.status-row {
+    margin-top: 0.85rem;
+}
+
+.status-row-label {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.3rem;
+    color: var(--text);
+    font-size: 0.85rem;
+}
+
+.status-track {
+    height: 8px;
+    background: var(--surface-raised);
+}
+
+.status-track span {
+    display: block;
+    height: 100%;
+    background: var(--accent-gold);
+}
+
+.panel-link {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    border-top: 2px solid var(--border);
+    padding-top: 0.75rem;
+    color: var(--primary);
+    font-weight: 800;
+}
+
+.watch-list {
+    border-bottom: 2px solid var(--border);
+}
+
+.watch-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    border-top: 2px solid var(--border);
+    padding: 0.7rem 0;
+    color: var(--text);
+}
+
+.status-watch-item form {
+    flex: 0 0 auto;
+    margin: 0;
+}
+
+.status-watch-item .button {
+    white-space: nowrap;
+}
+
+.watch-copy {
+    display: grid;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.watch-item .watch-copy {
+    color: inherit;
+}
+
+.watch-copy strong,
+.watch-copy small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.watch-copy small {
+    color: var(--muted);
+}
+
+.watch-date {
+    flex: 0 0 auto;
+    background: var(--surface-raised);
+    padding: 0.25rem 0.4rem;
+    color: var(--text);
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+
+.watch-date.is-overdue {
+    border: 1px solid var(--danger);
+    background: var(--card-rose);
+    color: var(--danger);
+}
+
+.panel-empty {
+    min-height: 125px;
+    border: 2px dashed var(--border);
+    padding: 1rem;
+    color: var(--muted);
+}
+
+.recent-harvest-panel {
+    margin-top: 1rem;
+}
+
+.panel-heading-row {
+    margin-bottom: 0.75rem;
+}
+

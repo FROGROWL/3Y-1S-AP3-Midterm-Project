@@ -1,0 +1,59 @@
+.module-layout > .column {
+    min-width: 0;
+}
+
+.module-layout .table-card {
+    min-width: 0;
+}
+
+.module-layout .table-container {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.module-layout .field.has-addons {
+    flex-wrap: wrap;
+}
+
+.module-layout .field.has-addons .control.is-expanded {
+    min-width: min(100%, 12rem);
+}
+
+.planting-cycle-details {
+    margin-top: 0.75rem;
+    border: 2px solid var(--border);
+    border-left: 7px solid var(--accent-gold);
+    background: var(--surface-raised);
+    padding: 0.9rem;
+}
+
+.planting-cycle-details[hidden] {
+    display: none;
+}
+
+.planting-cycle-details .eyebrow {
+    margin-bottom: 0.75rem;
+}
+
+.planting-cycle-details .field {
+    margin-bottom: 0.65rem;
+}
+
+.planting-cycle-details .field:last-child {
+    margin-bottom: 0;
+}
+
+.planting-cycle-details .input[readonly] {
+    background: var(--surface);
+    color: var(--text);
+    font-weight: 700;
+    cursor: default;
+}
+
+.audit-details {
+    max-width: 42rem;
+    max-height: 22rem;
+    overflow: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}

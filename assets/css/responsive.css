@@ -1,0 +1,150 @@
+@media screen and (max-width: 1215px) {
+    .module-layout {
+        display: block;
+    }
+
+    .module-layout > .column,
+    .module-layout > .column.is-4 {
+        width: 100%;
+    }
+}
+
+@media screen and (max-width: 767px) {
+    .module-layout .box {
+        padding: 1rem;
+    }
+
+    .module-layout .field.has-addons .control,
+    .module-layout .field.has-addons .select,
+    .module-layout .field.has-addons select,
+    .module-layout .field.has-addons .input {
+        max-width: 100%;
+    }
+}
+
+@media screen and (max-width: 1439px) {
+    .app-nav > .container {
+        flex-wrap: wrap;
+    }
+
+    .app-nav .navbar-burger {
+        display: flex;
+        margin-left: auto;
+    }
+
+    .app-nav .navbar-menu {
+        display: none;
+        flex: 1 0 100%;
+        padding: 0.5rem 0 1rem;
+        border-top: 1px solid var(--border);
+        box-shadow: none;
+    }
+
+    .app-nav .navbar-menu.is-active {
+        display: block;
+    }
+
+    .app-nav .navbar-start,
+    .app-nav .navbar-end {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .app-nav .navbar-item {
+        min-height: 2.75rem;
+        padding: 0.55rem 0.9rem;
+    }
+
+    .app-nav .user-chip {
+        flex-wrap: wrap;
+    }
+
+    .app-nav .navbar-end > .navbar-item > form {
+        width: 100%;
+    }
+}
+
+@media screen and (max-width: 1023px) {
+    .dashboard-stats > .column {
+        flex: none;
+        width: 33.3333%;
+    }
+}
+
+@media screen and (max-width: 767px) {
+    .dashboard-stats > .column {
+        width: 50%;
+    }
+
+    .dashboard-hero {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .dashboard-hero-actions {
+        margin-bottom: 0;
+    }
+
+    .dashboard-hero-actions .button {
+        flex: 1 1 auto;
+    }
+
+    .panel-heading-row {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .login-wrap {
+        padding: 1rem;
+    }
+
+    .login-card {
+        padding: 1.5rem;
+    }
+
+    .welcome .hero-body {
+        padding: 2.25rem 1.25rem;
+    }
+
+    .welcome .title {
+        font-size: 1.8rem;
+    }
+}
+
+@media screen and (max-width: 380px) {
+    .dashboard-stats > .column {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+@media print {
+    .app-nav,
+    .app-footer,
+    .button,
+    form {
+        display: none !important;
+    }
+
+    html,
+    body,
+    .box,
+    .table {
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    .box {
+        border: 0;
+        box-shadow: none;
+    }
+}

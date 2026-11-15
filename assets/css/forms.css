@@ -1,0 +1,139 @@
+.login-wrap {
+    display: grid;
+    min-height: calc(100vh - 9rem);
+    padding: 2rem;
+    place-items: center;
+}
+
+.login-card {
+    width: min(100%, 430px);
+    padding: 2.5rem;
+    box-shadow: 0 20px 70px #1425361a;
+}
+
+.login-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+}
+
+.brand.large {
+    font-size: 1.5rem;
+}
+
+.button.is-primary {
+    border-color: var(--accent-gold);
+    background: var(--accent-gold);
+    color: var(--button-text);
+    font-weight: 800;
+}
+
+.button.is-primary:hover {
+    border-color: var(--primary-hover);
+    background: var(--primary-hover);
+    color: var(--surface);
+}
+
+.button.is-light,
+.tag.is-light {
+    border: 1px solid var(--border);
+    background: var(--surface-raised);
+    color: var(--text);
+}
+
+.button.is-danger.is-light {
+    border: 1px solid var(--danger);
+    background: var(--surface);
+    color: var(--danger);
+}
+
+.input,
+.textarea,
+.select select {
+    border-color: var(--border);
+    background: var(--surface);
+    color: var(--text);
+}
+
+.input:disabled,
+.textarea:disabled,
+.select select:disabled {
+    background: var(--surface-raised);
+    color: var(--muted);
+    opacity: 1;
+}
+
+.input::placeholder,
+.textarea::placeholder {
+    color: var(--muted);
+    opacity: 1;
+}
+
+.select:not(.is-multiple):not(.is-loading)::after {
+    border-color: var(--primary);
+}
+
+.select select:focus,
+.input:focus,
+.textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.15em color-mix(in srgb, var(--primary) 35%, transparent);
+}
+
+:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+}
+
+.has-text-grey {
+    color: var(--muted) !important;
+}
+
+.subtitle,
+.label,
+.help {
+    color: var(--muted);
+}
+
+.label {
+    font-weight: 600;
+}
+
+.pagination-link,
+.pagination-next,
+.pagination-previous {
+    border-color: var(--border);
+    background: var(--surface);
+    color: var(--text);
+}
+
+.pagination-list {
+    color: var(--muted);
+}
+
+.pagination-link:hover,
+.pagination-next:hover,
+.pagination-previous:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    border: 1px solid var(--border);
+    background: var(--surface-raised);
+    color: var(--text);
+}
+
+.theme-toggle:hover {
+    border-color: var(--primary);
+    background: var(--surface);
+    color: var(--primary);
+}
+
+.theme-icon {
+    font-size: 1rem;
+    line-height: 1;
+}

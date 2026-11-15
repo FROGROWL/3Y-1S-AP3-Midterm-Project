@@ -1,0 +1,54 @@
+.app-nav {
+    min-height: 4.5rem;
+    background: var(--surface);
+    border-bottom: 4px solid var(--accent-gold);
+}
+
+.navbar-menu,
+.navbar-dropdown {
+    background: var(--surface);
+}
+
+.brand {
+    gap: 0.55rem;
+    color: var(--text) !important;
+    font-size: 1.16rem;
+    font-weight: 800;
+}
+
+.brand-light {
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.brand-mark {
+    display: block;
+    width: 2rem;
+    height: 2rem;
+    object-fit: cover;
+}
+
+.brand.large .brand-mark {
+    width: 2.75rem;
+    height: 2.75rem;
+}
+
+.navbar-item,
+.navbar-link {
+    color: var(--text);
+    font-size: 0.9rem;
+}
+
+.navbar-item:hover,
+.navbar-link:hover {
+    background: var(--surface-raised);
+    color: var(--primary);
+}
+
+.navbar-burger {
+    color: var(--text);
+}
+
+.user-chip {
+    gap: 0.65rem;
+}

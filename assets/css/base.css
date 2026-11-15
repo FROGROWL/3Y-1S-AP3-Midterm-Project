@@ -1,0 +1,50 @@
+* {
+    scrollbar-color: var(--border) var(--page-bg);
+}
+
+*,
+*::before,
+*::after {
+    border-radius: 0 !important;
+}
+
+html {
+    min-height: 100%;
+    background: var(--page-bg);
+}
+
+body {
+    min-height: 100vh;
+    background: var(--page-bg);
+    color: var(--text);
+    font-family: "DM Sans", sans-serif;
+}
+
+h1,
+h2,
+h3,
+.brand {
+    font-family: Manrope, sans-serif;
+}
+
+.title,
+.label,
+.content,
+.table,
+strong {
+    color: var(--text);
+}
+
+.content p,
+.content li,
+.content td,
+.content th,
+.help,
+.pagination-ellipsis {
+    color: var(--text);
+}
+
+.subtitle,
+.help {
+    color: var(--muted);
+}

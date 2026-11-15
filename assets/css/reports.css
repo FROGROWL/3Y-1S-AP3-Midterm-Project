@@ -1,0 +1,53 @@
+.report-filters,
+.report-chart-panel {
+    border-top: 7px solid var(--accent-gold);
+}
+
+.performance-chart {
+    display: grid;
+    gap: 0.8rem;
+}
+
+.performance-chart-row {
+    display: grid;
+    grid-template-columns: minmax(8rem, 1.2fr) minmax(5rem, 3fr) minmax(5.5rem, auto);
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.performance-chart-label {
+    overflow: hidden;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.performance-chart-track {
+    height: 1rem;
+    overflow: hidden;
+    background: var(--chart-track);
+}
+
+.performance-chart-track span {
+    display: block;
+    height: 100%;
+    min-width: 0.2rem;
+    background: var(--accent-gold);
+}
+
+.performance-chart-row strong {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.report-kpi-value {
+    font-size: clamp(1rem, 1.7vw, 1.65rem);
+}
+
+@media (max-width: 600px) {
+    .performance-chart-row {
+        grid-template-columns: minmax(5.5rem, 1fr) minmax(3rem, 2fr) minmax(4rem, auto);
+        gap: 0.45rem;
+        font-size: 0.85rem;
+    }
+}
