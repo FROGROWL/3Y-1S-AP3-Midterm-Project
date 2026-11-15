@@ -14,12 +14,12 @@ foreach ($module['fields'] as [$fieldKey, $fieldLabel, $fieldType]) {
     ];
 }
 $lookupTables = [
-    'soil_type' => ['id' => 'soil_type_id', 'label' => 'label'],
-    'irrigation_type' => ['id' => 'irrigation_type_id', 'label' => 'label'],
-    'crop_category' => ['id' => 'crop_category_id', 'label' => 'label'],
-    'growing_season' => ['id' => 'growing_season_id', 'label' => 'label'],
-    'quality_grade' => ['id' => 'quality_grade_id', 'label' => 'label'],
-    'planting_status' => ['id' => 'status_id', 'label' => 'label'],
+    'soil_type' => ['id' => 'soil_type_id', 'label' => 'code'],
+    'irrigation_type' => ['id' => 'irrigation_type_id', 'label' => 'code'],
+    'crop_category' => ['id' => 'crop_category_id', 'label' => 'code'],
+    'growing_season' => ['id' => 'growing_season_id', 'label' => 'code'],
+    'quality_grade' => ['id' => 'quality_grade_id', 'label' => 'code'],
+    'planting_status' => ['id' => 'status_id', 'label' => 'code'],
 ];
 $filters = [];
 foreach ($filterFields as $fieldKey => $fieldInfo) {
@@ -83,8 +83,8 @@ foreach ($filters as $fieldKey => $value) {
         'farm' => ['from' => 'farm f', 'id' => 'f.farm_id', 'text' => 'f.farm_name || \' \' || f.location'],
         'crop' => ['from' => 'crop f', 'id' => 'f.crop_id', 'text' => 'f.crop_name'],
         'crop_variety' => ['from' => 'crop_variety f JOIN crop c ON c.crop_id = f.crop_id', 'id' => 'f.variety_id', 'text' => "c.crop_name || ' / ' || f.variety_name"],
-        'harvest_remark' => ['from' => 'harvest_remark f', 'id' => 'f.remark_id', 'text' => 'f.description'],
-        'planting' => ['from' => 'planting f JOIN farm af ON af.farm_id = f.farm_id JOIN crop_variety av ON av.variety_id = f.variety_id JOIN crop ac ON ac.crop_id = av.crop_id JOIN planting_status aps ON aps.status_id = f.status_id', 'id' => 'f.planting_id', 'text' => "af.farm_name || ' ' || ac.crop_name || ' ' || av.variety_name || ' ' || aps.label || ' ' || CAST(f.planting_date AS TEXT)"],
+        'harvest_remark' => ['from' => 'harvest_remark f', 'id' => 'f.remark_id', 'text' => 'f.code'],
+        'planting' => ['from' => 'planting f JOIN farm af ON af.farm_id = f.farm_id JOIN crop_variety av ON av.variety_id = f.variety_id JOIN crop ac ON ac.crop_id = av.crop_id JOIN planting_status aps ON aps.status_id = f.status_id', 'id' => 'f.planting_id', 'text' => "af.farm_name || ' ' || ac.crop_name || ' ' || av.variety_name || ' ' || aps.code || ' ' || CAST(f.planting_date AS TEXT)"],
     ];
     $refInfo = $referenceConfig[$reference];
     $conditions[] = 'EXISTS (SELECT 1 FROM ' . $refInfo['from'] . ' WHERE '

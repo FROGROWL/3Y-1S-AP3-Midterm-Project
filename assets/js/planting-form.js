@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const total = Number(option.dataset.farmArea || 0);
             const used = Number(option.dataset.farmUsed || 0);
             const statusCode = plantingStatusForArea?.selectedOptions[0]?.dataset.statusCode;
-            const reservedArea = ['planting', 'growing', 'ready'].includes(statusCode)
+            const reservedArea = ['Planting', 'Growing', 'Ready to harvest'].includes(statusCode)
                 ? Number(areaInput?.value || 0)
                 : 0;
             const remaining = Math.max(0, total - used);
@@ -136,9 +136,9 @@ document.addEventListener('DOMContentLoaded', () => {
             today.setHours(0, 0, 0, 0);
             const futurePlanting = start > today;
             const daysUntilHarvest = Math.ceil((harvest - today) / 86400000);
-            const allowed = futurePlanting ? ['planting', 'cancelled']
-                : daysUntilHarvest > 20 ? ['planting', 'growing', 'cancelled']
-                    : ['ready', 'harvested', 'cancelled'];
+            const allowed = futurePlanting ? ['Planting', 'Cancelled']
+                : daysUntilHarvest > 20 ? ['Planting', 'Growing', 'Cancelled']
+                    : ['Ready to harvest', 'Harvested', 'Cancelled'];
             let selectedAllowed = false;
             Array.from(statusSelect.options).forEach((option) => {
                 const visible = !option.value || allowed.includes(option.dataset.statusCode);

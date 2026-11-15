@@ -2,7 +2,7 @@
     if ($page === 'harvests' && !$id) {
         $readyCheck = db()->prepare(
             "SELECT 1 FROM planting p JOIN planting_status s ON s.status_id = p.status_id
-             WHERE p.planting_id = ? AND s.code = 'ready'"
+             WHERE p.planting_id = ? AND lower(s.code) = 'ready to harvest'"
         );
         $readyCheck->execute([$data['planting_id'] ?? null]);
 

@@ -14,7 +14,7 @@ $referenceTables = [
         'from' => 'planting',
         'order' => 'planting.planting_id ASC',
     ],
-    'harvest_remark' => ['id' => 'remark_id', 'label' => 'description', 'order' => 'sort_order, label'],
+    'harvest_remark' => ['id' => 'remark_id', 'label' => 'code', 'order' => 'sort_order, code'],
 ];
 $references = [];
 
@@ -28,7 +28,7 @@ foreach ($module['fields'] as [$key, $label, $type]) {
         if ($page === 'harvests' && $reference === 'planting') {
             $filter = "WHERE EXISTS (
                 SELECT 1 FROM planting_status ps
-                WHERE ps.status_id = planting.status_id AND ps.code = 'ready'
+                WHERE ps.status_id = planting.status_id AND lower(ps.code) = 'ready to harvest'
             )";
             if ($record && !empty($record['planting_id'])) {
                 $filter .= ' OR planting.planting_id = ' . (int) $record['planting_id'];
@@ -46,7 +46,7 @@ foreach ($module['fields'] as [$key, $label, $type]) {
     if (str_starts_with($type, 'lookup:')) {
         $lookupName = substr($type, 7);
         $lookupInfo = $lookupTables[$lookupName];
-        $lookupOrder = $lookupInfo['order'] ?? 'sort_order, label';
+        $lookupOrder = $lookupInfo['order'] ?? 'sort_order, code';
         $references[$key] = db()->query(
             "SELECT {$lookupInfo['id']} AS id, {$lookupInfo['label']} AS label
              FROM {$lookupName}
@@ -62,10 +62,10 @@ $varietyPeriods = [];
 if ($page === 'plantings') {
     $farmQuery = db()->prepare(
         "SELECT f.farm_id, f.location, f.area_hectares,
-                COALESCE(st.label, 'Not set') AS soil_type,
-                COALESCE(it.label, 'Not set') AS irrigation_type,
+                COALESCE(st.code, 'Not set') AS soil_type,
+                COALESCE(it.code, 'Not set') AS irrigation_type,
                 COALESCE(SUM(p.area_planted) FILTER (
-                    WHERE ps.code IN ('planting', 'growing', 'ready')
+                    WHERE lower(ps.code) IN ('planting', 'growing', 'ready to harvest')
                 ), 0) AS used_area
          FROM farm f
          LEFT JOIN soil_type st ON st.soil_type_id = f.soil_type_id
@@ -73,7 +73,7 @@ if ($page === 'plantings') {
          LEFT JOIN planting p ON p.farm_id = f.farm_id
               AND p.planting_id <> COALESCE(?, 0)
          LEFT JOIN planting_status ps ON ps.status_id = p.status_id
-         GROUP BY f.farm_id, st.label, it.label"
+         GROUP BY f.farm_id, st.code, it.code"
     );
     $farmQuery->execute([$record['planting_id'] ?? 0]);
     foreach ($farmQuery->fetchAll() as $farmRow) {
@@ -82,7 +82,7 @@ if ($page === 'plantings') {
 
     $varietyRows = db()->query(
         'SELECT variety.variety_id, variety.growing_period_days,
-                COALESCE(season.label, \'Not specified\') AS growing_season
+                COALESCE(season.code, \'Not specified\') AS growing_season
          FROM crop_variety variety
          LEFT JOIN growing_season season
            ON season.growing_season_id = variety.growing_season_id'
@@ -102,14 +102,14 @@ if ($page === 'harvests') {
                     to_char(planting.expected_harvest_date, 'Mon DD, YYYY'),
                     'Not set'
                 ) AS expected,
-                planting_status.label AS status
+                planting_status.code AS status
          FROM planting
          JOIN farm ON farm.farm_id = planting.farm_id
          JOIN crop_variety variety ON variety.variety_id = planting.variety_id
          JOIN crop ON crop.crop_id = variety.crop_id
          JOIN planting_status
            ON planting_status.status_id = planting.status_id
-         WHERE planting_status.code = 'ready'"
+         WHERE lower(planting_status.code) = 'ready to harvest'"
     )->fetchAll();
 
     if ($record && !empty($record['planting_id'])) {
@@ -119,7 +119,7 @@ if ($page === 'harvests') {
                     farm.farm_name AS farm,
                     to_char(planting.planting_date, 'Mon DD, YYYY') AS planted,
                     COALESCE(to_char(planting.expected_harvest_date, 'Mon DD, YYYY'), 'Not set') AS expected,
-                    planting_status.label AS status
+                    planting_status.code AS status
              FROM planting JOIN farm ON farm.farm_id = planting.farm_id
              JOIN crop_variety variety ON variety.variety_id = planting.variety_id
              JOIN crop ON crop.crop_id = variety.crop_id

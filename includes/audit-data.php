@@ -20,11 +20,11 @@ if ($filters['user'] !== '') {
     $params[] = '%' . $filters['user'] . '%';
 }
 if ($filters['action'] !== '') {
-    $conditions[] = 'action.label = ?';
+    $conditions[] = 'action.code = ?';
     $params[] = $filters['action'];
 }
 if ($filters['module'] !== '') {
-    $conditions[] = 'entity.label = ?';
+    $conditions[] = 'entity.code = ?';
     $params[] = $filters['module'];
 }
 if ($filters['detail'] !== '') {
@@ -49,8 +49,8 @@ $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
 $sortColumns = [
     'date' => 'log.occurred_at',
     'user' => 'account.full_name',
-    'action' => 'action.label',
-    'module' => 'entity.label',
+    'action' => 'action.code',
+    'module' => 'entity.code',
 ];
 $sort = (string) ($_GET['sort'] ?? 'date');
 if (!isset($sortColumns[$sort])) {
@@ -70,7 +70,7 @@ $offset = ($pageNumber - 1) * $perPage;
 $orderBy = $sortColumns[$sort];
 $logs = $pdo->prepare(
     'SELECT log.audit_id, log.occurred_at, log.entity_record_id, log.details,
-            account.full_name, account.email, action.label AS action, entity.label AS entity
+            account.full_name, account.email, action.code AS action, entity.code AS entity
      ' . $baseFrom . $where . '
      ORDER BY ' . $orderBy . ' ' . $direction . ' NULLS LAST, log.audit_id DESC
      LIMIT ' . $perPage . ' OFFSET ' . $offset
@@ -78,6 +78,6 @@ $logs = $pdo->prepare(
 $logs->execute($params);
 $logs = $logs->fetchAll();
 
-$actionOptions = $pdo->query('SELECT label FROM audit_action ORDER BY sort_order, label')->fetchAll(PDO::FETCH_COLUMN);
-$moduleOptions = $pdo->query('SELECT label FROM audit_entity ORDER BY sort_order, label')->fetchAll(PDO::FETCH_COLUMN);
+$actionOptions = $pdo->query('SELECT code FROM audit_action ORDER BY sort_order, code')->fetchAll(PDO::FETCH_COLUMN);
+$moduleOptions = $pdo->query('SELECT code FROM audit_entity ORDER BY sort_order, code')->fetchAll(PDO::FETCH_COLUMN);
 $pageQuery = ['page' => 'audit', 'sort' => $sort, 'dir' => strtolower($direction)] + array_filter($filters, static fn ($value) => $value !== '');

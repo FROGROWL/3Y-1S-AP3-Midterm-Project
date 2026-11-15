@@ -246,4 +246,35 @@ ALTER TABLE audit_log ADD CONSTRAINT audit_log_action_id_fkey
 ALTER TABLE audit_log ADD CONSTRAINT audit_log_entity_type_id_fkey
     FOREIGN KEY (entity_type_id) REFERENCES audit_entity(entity_type_id);
 
+-- Store display-ready values in code, then remove duplicate display columns.
+ALTER TABLE soil_type ALTER COLUMN code TYPE VARCHAR(60);
+UPDATE soil_type SET code = label;
+ALTER TABLE soil_type DROP COLUMN label;
+ALTER TABLE irrigation_type ALTER COLUMN code TYPE VARCHAR(60);
+UPDATE irrigation_type SET code = label;
+ALTER TABLE irrigation_type DROP COLUMN label;
+ALTER TABLE crop_category ALTER COLUMN code TYPE VARCHAR(60);
+UPDATE crop_category SET code = label;
+ALTER TABLE crop_category DROP COLUMN label;
+ALTER TABLE growing_season ALTER COLUMN code TYPE VARCHAR(60);
+UPDATE growing_season SET code = label;
+ALTER TABLE growing_season DROP COLUMN label;
+ALTER TABLE quality_grade ALTER COLUMN code TYPE VARCHAR(40);
+UPDATE quality_grade SET code = label;
+ALTER TABLE quality_grade DROP COLUMN label;
+ALTER TABLE user_role ALTER COLUMN code TYPE VARCHAR(40);
+UPDATE user_role SET code = label;
+ALTER TABLE user_role DROP COLUMN label;
+ALTER TABLE planting_status ALTER COLUMN code TYPE VARCHAR(40);
+UPDATE planting_status SET code = label;
+ALTER TABLE planting_status DROP COLUMN label;
+ALTER TABLE harvest_remark ALTER COLUMN code TYPE VARCHAR(100);
+UPDATE harvest_remark SET code = description;
+ALTER TABLE harvest_remark DROP COLUMN description;
+ALTER TABLE audit_action ALTER COLUMN code TYPE VARCHAR(40);
+UPDATE audit_action SET code = label;
+ALTER TABLE audit_action DROP COLUMN label;
+ALTER TABLE audit_entity ALTER COLUMN code TYPE VARCHAR(80);
+UPDATE audit_entity SET code = label;
+ALTER TABLE audit_entity DROP COLUMN label;
 COMMIT;

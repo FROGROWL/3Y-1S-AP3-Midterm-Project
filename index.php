@@ -11,7 +11,7 @@ try {
 
         $statement = db()->prepare(
             'SELECT app_user.user_id, app_user.full_name, app_user.email,
-                    app_user.password_hash, user_role.label AS role, app_user.is_active
+                    app_user.password_hash, user_role.code AS role, app_user.is_active
              FROM app_user
              JOIN user_role ON user_role.role_id = app_user.role_id
              WHERE lower(app_user.email) = lower(?)'

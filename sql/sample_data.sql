@@ -39,21 +39,21 @@ SELECT farmer.farmer_id,
        irrigation.irrigation_type_id
 FROM (
     VALUES
-        ('Juan', 'Dela Cruz', 'Dela Cruz Farm', 'Cebu City', 2.50, 'loam', 'rainfed'),
-        ('Maria', 'Santos', 'Santos Rice Farm', 'Carcar City, Cebu', 4.20, 'clay_loam', 'irrigated'),
-        ('Pedro', 'Reyes', 'Reyes Agricultural Farm', 'Danao City, Cebu', 3.80, 'sandy_loam', 'rainfed'),
-        ('Ana', 'Garcia', 'Garcia Vegetable Farm', 'Argao, Cebu', 1.75, 'loam', 'drip_irrigation'),
-        ('Jose', 'Mendoza', 'Mendoza Farm', 'Bogo City, Cebu', 5.00, 'clay', 'irrigated'),
-        ('Ramon', 'Flores', 'Flores Corn Farm', 'Toledo City, Cebu', 3.40, 'sandy_loam', 'rainfed'),
-        ('Elena', 'Cruz', 'Cruz Family Farm', 'Naga City, Cebu', 2.80, 'loam', 'irrigated'),
-        ('Antonio', 'Lim', 'Lim Agricultural Farm', 'Minglanilla, Cebu', 2.25, 'clay_loam', 'drip_irrigation'),
-        ('Rosa', 'Fernandez', 'Fernandez Farm', 'Liloan, Cebu', 3.10, 'sandy_loam', 'rainfed'),
-        ('Mario', 'Villanueva', 'Villanueva Green Farm', 'Compostela, Cebu', 4.50, 'loam', 'irrigated'),
-        ('Teresa', 'Navarro', 'Navarro Rice Field', 'Talisay City, Cebu', 3.75, 'clay', 'irrigated'),
-        ('Carlos', 'Ramos', 'Ramos Farm', 'Consolacion, Cebu', 2.60, 'loam', 'rainfed'),
-        ('Liza', 'Torres', 'Torres Vegetable Farm', 'Dalaguete, Cebu', 1.80, 'sandy_loam', 'drip_irrigation'),
-        ('Roberto', 'Castillo', 'Castillo Agricultural Farm', 'Barili, Cebu', 5.50, 'clay_loam', 'irrigated'),
-        ('Susan', 'Aquino', 'Aquino Farm', 'Sibonga, Cebu', 3.20, 'loam', 'rainfed')
+        ('Juan', 'Dela Cruz', 'Dela Cruz Farm', 'Cebu City', 2.50, 'Loam', 'Rainfed'),
+        ('Maria', 'Santos', 'Santos Rice Farm', 'Carcar City, Cebu', 4.20, 'Clay Loam', 'Irrigated'),
+        ('Pedro', 'Reyes', 'Reyes Agricultural Farm', 'Danao City, Cebu', 3.80, 'Sandy Loam', 'Rainfed'),
+        ('Ana', 'Garcia', 'Garcia Vegetable Farm', 'Argao, Cebu', 1.75, 'Loam', 'Drip Irrigation'),
+        ('Jose', 'Mendoza', 'Mendoza Farm', 'Bogo City, Cebu', 5.00, 'Clay', 'Irrigated'),
+        ('Ramon', 'Flores', 'Flores Corn Farm', 'Toledo City, Cebu', 3.40, 'Sandy Loam', 'Rainfed'),
+        ('Elena', 'Cruz', 'Cruz Family Farm', 'Naga City, Cebu', 2.80, 'Loam', 'Irrigated'),
+        ('Antonio', 'Lim', 'Lim Agricultural Farm', 'Minglanilla, Cebu', 2.25, 'Clay Loam', 'Drip Irrigation'),
+        ('Rosa', 'Fernandez', 'Fernandez Farm', 'Liloan, Cebu', 3.10, 'Sandy Loam', 'Rainfed'),
+        ('Mario', 'Villanueva', 'Villanueva Green Farm', 'Compostela, Cebu', 4.50, 'Loam', 'Irrigated'),
+        ('Teresa', 'Navarro', 'Navarro Rice Field', 'Talisay City, Cebu', 3.75, 'Clay', 'Irrigated'),
+        ('Carlos', 'Ramos', 'Ramos Farm', 'Consolacion, Cebu', 2.60, 'Loam', 'Rainfed'),
+        ('Liza', 'Torres', 'Torres Vegetable Farm', 'Dalaguete, Cebu', 1.80, 'Sandy Loam', 'Drip Irrigation'),
+        ('Roberto', 'Castillo', 'Castillo Agricultural Farm', 'Barili, Cebu', 5.50, 'Clay Loam', 'Irrigated'),
+        ('Susan', 'Aquino', 'Aquino Farm', 'Sibonga, Cebu', 3.20, 'Loam', 'Rainfed')
 ) AS sample(
     first_name, last_name, farm_name, location, area_hectares,
     soil_code, irrigation_code
@@ -73,16 +73,16 @@ INSERT INTO crop (crop_name, crop_category_id)
 SELECT sample.crop_name, category.crop_category_id
 FROM (
     VALUES
-        ('Rice', 'cereal'),
-        ('Corn', 'cereal'),
-        ('Tomato', 'vegetable'),
-        ('Eggplant', 'vegetable'),
-        ('Banana', 'fruit'),
-        ('Mango', 'fruit'),
-        ('Peanut', 'legume'),
-        ('Cassava', 'root_crop'),
-        ('Sweet Potato', 'root_crop'),
-        ('Watermelon', 'fruit')
+        ('Rice', 'Cereal'),
+        ('Corn', 'Cereal'),
+        ('Tomato', 'Vegetable'),
+        ('Eggplant', 'Vegetable'),
+        ('Banana', 'Fruit'),
+        ('Mango', 'Fruit'),
+        ('Peanut', 'Legume'),
+        ('Cassava', 'Root Crop'),
+        ('Sweet Potato', 'Root Crop'),
+        ('Watermelon', 'Fruit')
 ) AS sample(crop_name, category_code)
 JOIN crop_category category ON category.code = sample.category_code
 ON CONFLICT (crop_name) DO NOTHING;
@@ -91,16 +91,16 @@ INSERT INTO crop_variety (crop_id, variety_name, growing_period_days, growing_se
 SELECT crop.crop_id, sample.variety_name, sample.growing_period_days, season.growing_season_id
 FROM (
     VALUES
-        ('Rice', 'NSIC Rc 222', 115, 'wet_season'),
-        ('Corn', 'Yellow Corn', 100, 'dry_season'),
-        ('Tomato', 'Diamante Max', 90, 'dry_season'),
-        ('Eggplant', 'Morena', 100, 'year_round'),
-        ('Banana', 'Lakatan', 300, 'year_round'),
-        ('Mango', 'Carabao', 150, 'dry_season'),
-        ('Peanut', 'BPI Pn 9', 110, 'dry_season'),
-        ('Cassava', 'Golden Yellow', 240, 'year_round'),
-        ('Sweet Potato', 'NSIC Sp 30', 120, 'year_round'),
-        ('Watermelon', 'Sweet 16', 85, 'dry_season')
+        ('Rice', 'NSIC Rc 222', 115, 'Wet Season'),
+        ('Corn', 'Yellow Corn', 100, 'Dry Season'),
+        ('Tomato', 'Diamante Max', 90, 'Dry Season'),
+        ('Eggplant', 'Morena', 100, 'Year Round'),
+        ('Banana', 'Lakatan', 300, 'Year Round'),
+        ('Mango', 'Carabao', 150, 'Dry Season'),
+        ('Peanut', 'BPI Pn 9', 110, 'Dry Season'),
+        ('Cassava', 'Golden Yellow', 240, 'Year Round'),
+        ('Sweet Potato', 'NSIC Sp 30', 120, 'Year Round'),
+        ('Watermelon', 'Sweet 16', 85, 'Dry Season')
 ) AS sample(crop_name, variety_name, growing_period_days, season_code)
 JOIN crop ON crop.crop_name = sample.crop_name
 JOIN growing_season season ON season.code = sample.season_code
@@ -122,7 +122,7 @@ WITH farms AS (
                    CURRENT_DATE - (variety.growing_period_days + 20 + series.number * 2)
                ELSE CURRENT_DATE - ((series.number - 20) * 4)
            END AS planting_date,
-           CASE WHEN series.number <= 20 THEN 'harvested' ELSE 'growing' END AS status_code
+           CASE WHEN series.number <= 20 THEN 'Harvested' ELSE 'Growing' END AS status_code
     FROM generate_series(1, 50) AS series(number)
     JOIN farms farm ON farm.row_number = ((series.number - 1) % 15) + 1
     JOIN varieties variety ON variety.row_number = ((series.number - 1) % 10) + 1
@@ -180,17 +180,17 @@ JOIN planting
  AND planting.planting_date = example.planting_date
 JOIN quality_grade grade
   ON grade.code = CASE example.number % 3
-      WHEN 1 THEN 'grade_a'
-      WHEN 2 THEN 'grade_b'
-      ELSE 'grade_c'
+      WHEN 1 THEN 'Grade A'
+      WHEN 2 THEN 'Grade B'
+      ELSE 'Grade C'
   END
 JOIN harvest_remark remark
   ON remark.code = CASE example.number % 5
-      WHEN 0 THEN 'good'
-      WHEN 1 THEN 'acceptable'
-      WHEN 2 THEN 'low_yield'
-      WHEN 3 THEN 'poor_quality'
-      ELSE 'damaged'
+      WHEN 0 THEN 'Good Harvest'
+      WHEN 1 THEN 'Acceptable Quality'
+      WHEN 2 THEN 'Low Yield'
+      WHEN 3 THEN 'Poor Quality'
+      ELSE 'Damaged Harvest'
   END
 WHERE NOT EXISTS (
     SELECT 1 FROM harvest existing

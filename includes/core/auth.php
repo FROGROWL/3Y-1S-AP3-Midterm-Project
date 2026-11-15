@@ -44,7 +44,7 @@ function require_login(): void
 
     $currentAccount = db()->prepare(
         'SELECT app_user.full_name, app_user.email, app_user.is_active,
-                app_user.signed_out_at, user_role.label AS role
+                app_user.signed_out_at, user_role.code AS role
          FROM app_user JOIN user_role ON user_role.role_id = app_user.role_id
          WHERE app_user.user_id = ?'
     );

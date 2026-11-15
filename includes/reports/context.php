@@ -51,7 +51,7 @@ $varieties = $pdo->query(
      ORDER BY crop.crop_name, variety.variety_name'
 )->fetchAll();
 $grades = $pdo->query(
-    'SELECT quality_grade_id, label FROM quality_grade ORDER BY sort_order, label'
+    'SELECT quality_grade_id, code AS label FROM quality_grade ORDER BY sort_order, code'
 )->fetchAll();
 
 $dimensions = [

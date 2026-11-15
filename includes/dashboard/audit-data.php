@@ -12,7 +12,7 @@ if ($isAdmin) {
     $dashboardPageState['today_audit_page'] = $todayAuditPage;
     $todayAudit = $pdo->prepare(
         "SELECT log.audit_id, log.occurred_at, log.entity_record_id,
-                account.full_name, action.label AS action, entity.label AS entity
+                account.full_name, action.code AS action, entity.code AS entity
          FROM audit_log log
          LEFT JOIN app_user account ON account.user_id = log.user_id
          JOIN audit_action action ON action.action_id = log.action_id

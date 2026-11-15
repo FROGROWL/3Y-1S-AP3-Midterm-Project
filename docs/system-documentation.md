@@ -185,22 +185,22 @@ For the complete normalization notes, see [normalization.md](normalization.md).
 | --- | --- | --- |
 | `farmer` | `farmer_id` | Farmer name, contact, address, and registration date. |
 | `farm` | `farm_id` | Farm owner, name, location, area, soil type, and irrigation type. |
-| `soil_type` | `soil_type_id` | Controlled soil values. |
-| `irrigation_type` | `irrigation_type_id` | Controlled irrigation values. |
+| `soil_type` | `soil_type_id` | Controlled soil values in the display-ready `code` column. |
+| `irrigation_type` | `irrigation_type_id` | Controlled irrigation values in `code`. |
 | `crop` | `crop_id` | Crop type and category. |
-| `crop_category` | `crop_category_id` | Controlled crop categories. |
+| `crop_category` | `crop_category_id` | Controlled crop categories in `code`. |
 | `crop_variety` | `variety_id` | Variety, parent crop, growing period, and recommended season. |
-| `growing_season` | `growing_season_id` | Controlled growing-season values. |
+| `growing_season` | `growing_season_id` | Controlled growing-season values in `code`. |
 | `planting` | `planting_id` | Farm, variety, planting/expected harvest dates, area, seed, and status. |
-| `planting_status` | `status_id` | Planting lifecycle status values. |
+| `planting_status` | `status_id` | Planting lifecycle values in `code`. |
 | `harvest` | `harvest_id` | Planting, harvest date, quantity, price, grade, and remark. |
-| `quality_grade` | `quality_grade_id` | Controlled harvest quality values. |
-| `harvest_remark` | `remark_id` | Controlled harvest remarks. |
+| `quality_grade` | `quality_grade_id` | Harvest quality values in `code`. |
+| `harvest_remark` | `remark_id` | Harvest remarks in `code`. |
 | `app_user` | `user_id` | Login identity, role, activity state, and password hash. |
-| `user_role` | `role_id` | Administrator and Staff roles. |
+| `user_role` | `role_id` | Administrator and Staff roles in `code`. |
 | `audit_log` | `audit_id` | User/action/entity references, record ID, timestamp, and JSON change details. |
-| `audit_action` | `action_id` | Login/logout and create/update/delete action types. |
-| `audit_entity` | `entity_type_id` | Entity names used to interpret audit record IDs. |
+| `audit_action` | `action_id` | Login/logout and create/update/delete values in `code`. |
+| `audit_entity` | `entity_type_id` | Display-ready entity names in `code`. |
 
 For column types, nullable fields, and detailed rules, see [data-dictionary.md](data-dictionary.md) and [the schema](../sql/schema.sql).
 
@@ -210,9 +210,9 @@ For column types, nullable fields, and detailed rules, see [data-dictionary.md](
 - One crop has many varieties; a crop-variety name pair must be unique. Deleting a crop cascades to varieties, while a variety referenced by a planting is protected from deletion.
 - One farm and one crop variety can each be referenced by many plantings. Each planting has one status and belongs to one farm and variety.
 - One planting can have many harvest records. Deleting a planting cascades to its harvest rows.
-- Lookup foreign keys connect farms, crops, varieties, plantings, harvests, and users to their corresponding lookup rows.
+- Lookup foreign keys connect farms, crops, varieties, plantings, harvests, and users to their corresponding lookup rows. Each lookup stores its display-ready name in one unique `code` column; it has no separate label or description column.
 - Deleting a user sets the audit log's `user_id` to `NULL`, preserving historical events. Audit action and entity types are foreign keys. `entity_record_id` is polymorphic and intentionally has no direct foreign key.
-- Emails, crop names, lookup codes/labels, and crop-variety pairs have uniqueness rules. Positive area/growing-period and nonnegative seed/yield/price checks are enforced where applicable. Expected harvest date cannot precede planting date.
+- Emails, crop names, lookup codes, and crop-variety pairs have uniqueness rules. Positive area/growing-period and nonnegative seed/yield/price checks are enforced where applicable. Expected harvest date cannot precede planting date.
 - Operational tables maintain creation/update timestamps. The database schema defines the authoritative constraints and delete behavior.
 
 ## 8. Screenshots of the working system

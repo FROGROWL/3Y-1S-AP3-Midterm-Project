@@ -8,12 +8,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'advan
          FROM planting_status current_status, planting_status next_status
          WHERE p.planting_id = ?
            AND current_status.status_id = p.status_id
-           AND next_status.code = CASE current_status.code
+           AND lower(next_status.code) = CASE lower(current_status.code)
                WHEN 'planting' THEN 'growing'
-               WHEN 'growing' THEN 'ready'
+               WHEN 'growing' THEN 'ready to harvest'
            END
-           AND ((current_status.code = 'planting' AND p.planting_date < ?::date)
-             OR (current_status.code = 'growing'
+           AND ((lower(current_status.code) = 'planting' AND p.planting_date < ?::date)
+             OR (lower(current_status.code) = 'growing'
                  AND p.planting_date <= ?::date
                  AND p.expected_harvest_date <= ?::date + INTERVAL '20 days'))
          RETURNING p.planting_id"
@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'advan
         $afterStatus = $statusLookup->fetchColumn();
         audit('UPDATE', 'planting', (int) $advancedId, [
             'status' => [
-                'before' => $afterStatus === 'growing' ? 'planting' : 'growing',
+                'before' => $afterStatus === 'Growing' ? 'Planting' : 'Growing',
                 'after' => $afterStatus,
             ],
         ]);

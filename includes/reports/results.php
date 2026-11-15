@@ -15,8 +15,8 @@ if (!$dateError) {
                 COALESCE(AVG(h.quantity_kg), 0) AS average_kg,
                 COALESCE(SUM(h.quantity_kg * COALESCE(h.selling_price_per_kg, 0)), 0) AS gross_value,
                 COALESCE(AVG(CASE grade.code
-                    WHEN 'grade_a' THEN 3.0 WHEN 'grade_b' THEN 2.0
-                    WHEN 'grade_c' THEN 1.0 ELSE NULL END), 0) AS quality_score
+                    WHEN 'Grade A' THEN 3.0 WHEN 'Grade B' THEN 2.0
+                    WHEN 'Grade C' THEN 1.0 ELSE NULL END), 0) AS quality_score
          FROM harvest h
          JOIN planting p ON p.planting_id = h.planting_id
          {$joins}
@@ -46,7 +46,7 @@ if (!$dateError) {
                 COUNT(*) AS cancelled_count
          FROM planting p {$joins}
          JOIN planting_status status ON status.status_id = p.status_id
-         WHERE status.code = 'cancelled'
+         WHERE lower(status.code) = 'cancelled'
            AND p.updated_at::date BETWEEN ? AND ? {$filterSql}
          GROUP BY {$dimension['group']}"
     );
@@ -85,7 +85,7 @@ if (!$dateError) {
                    SUM(p.area_planted) AS forecast_area
             FROM planting p {$joins}
             JOIN planting_status status ON status.status_id = p.status_id
-            WHERE status.code IN ('planting', 'growing', 'ready')
+            WHERE lower(status.code) IN ('planting', 'growing', 'ready to harvest')
               AND p.expected_harvest_date > CURRENT_DATE
               AND p.expected_harvest_date BETWEEN ? AND ? {$filterSql}
             GROUP BY {$dimension['group']}

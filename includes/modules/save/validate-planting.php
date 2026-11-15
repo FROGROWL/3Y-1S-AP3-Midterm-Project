@@ -30,10 +30,10 @@
         $chosenDate = new DateTimeImmutable($plantingDate);
         $daysToHarvest = (int) $today->diff(new DateTimeImmutable($harvestDate))->format('%r%a');
         $allowedStatuses = $chosenDate > $today
-            ? ['planting', 'cancelled']
+            ? ['Planting', 'Cancelled']
             : ($daysToHarvest > 20
-                ? ['planting', 'growing', 'cancelled']
-                : ['ready', 'harvested', 'cancelled']);
+                ? ['Planting', 'Growing', 'Cancelled']
+                : ['Ready to harvest', 'Harvested', 'Cancelled']);
 
         if (!in_array($statusCode, $allowedStatuses, true)) {
             flash('danger', 'The selected status does not match the planting and expected harvest dates.');
@@ -43,7 +43,7 @@
         $capacityQuery = db()->prepare(
             "SELECT f.area_hectares,
                     COALESCE(SUM(p.area_planted) FILTER (
-                        WHERE ps.code IN ('planting', 'growing', 'ready')
+                        WHERE lower(ps.code) IN ('planting', 'growing', 'ready to harvest')
                     ), 0) AS used_area
              FROM farm f
              LEFT JOIN planting p
@@ -55,7 +55,7 @@
         $capacityQuery->execute([$id, $farmId]);
         $capacity = $capacityQuery->fetch();
 
-        $capacityToReserve = in_array($statusCode, ['planting', 'growing', 'ready'], true)
+        $capacityToReserve = in_array($statusCode, ['Planting', 'Growing', 'Ready to harvest'], true)
             ? $areaPlanted
             : 0;
         $availableArea = max(

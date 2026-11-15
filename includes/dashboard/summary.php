@@ -14,7 +14,7 @@ $stats['active plantings'] = (int) $pdo->query(
     "SELECT COUNT(*)
      FROM planting p
      JOIN planting_status s ON s.status_id = p.status_id
-     WHERE s.code IN ('planting', 'growing', 'ready')"
+     WHERE lower(s.code) IN ('planting', 'growing', 'ready to harvest')"
 )->fetchColumn();
 if ($isAdmin) {
     $stats['active users'] = (int) $pdo->query(
@@ -31,10 +31,10 @@ $totalHarvest = (float) $pdo
     ->fetchColumn();
 
 $statusSummary = $pdo->query(
-    'SELECT s.code, s.label, COUNT(p.planting_id) AS record_count
+    'SELECT s.code AS label, COUNT(p.planting_id) AS record_count
      FROM planting_status s
      LEFT JOIN planting p ON p.status_id = s.status_id
-     GROUP BY s.status_id, s.code, s.label, s.sort_order
-     ORDER BY s.sort_order, s.label'
+     GROUP BY s.status_id, s.code, s.sort_order
+     ORDER BY s.sort_order, s.code'
 )->fetchAll();
 

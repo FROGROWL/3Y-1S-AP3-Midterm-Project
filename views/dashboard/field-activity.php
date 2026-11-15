@@ -85,7 +85,7 @@
                                         <input type="hidden" name="action" value="advance_planting">
                                         <input type="hidden" name="planting_id" value="<?= e($planting['planting_id']) ?>">
                                         <button class="button is-small is-primary">
-                                            Mark <?= $planting['code'] === 'planting' ? 'growing' : 'ready' ?>
+                                            Mark <?= $planting['code'] === 'Planting' ? 'Growing' : 'Ready to harvest' ?>
                                         </button>
                                     </form>
                                 </div>

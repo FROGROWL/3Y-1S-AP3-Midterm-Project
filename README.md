@@ -54,7 +54,7 @@ Set-Location "C:\xampp\htdocs\Midterm Project\agri-info-system"
 C:\xampp\php\php.exe install.php
 ```
 
-Before applying an update to a database that already contains records, create a Supabase backup. For an earlier installation, the installer detects the old schema and applies `sql/migrations/001_integer_lookup_normalization.sql` in a transaction. It moves category text into lookup rows, creates crop-variety records, and remaps existing planting, harvest, user, and audit references to integer IDs. Then it applies `sql/schema.sql`, `sql/lookup_data.sql`, and `sql/sample_data.sql`. The demo seed includes 15 farmers, 15 farms, 10 crop types and varieties, 50 plantings, and 20 harvests; it does not truncate existing application records.
+Before applying an update to a database that already contains records, create a Supabase backup. For an earlier installation, the installer detects the old schema and applies `sql/migrations/001_integer_lookup_normalization.sql` in a transaction. It moves category text into lookup rows, creates crop-variety records, and remaps existing planting, harvest, user, and audit references to integer IDs. Then it applies `sql/schema.sql`, `sql/lookup_data.sql`, and `sql/sample_data.sql`. The lookup script consolidates each lookup display value into its unique `code` column while preserving the integer IDs and their foreign-key references. The demo seed includes 15 farmers, 15 farms, 10 crop types and varieties, 50 plantings, and 20 harvests; it does not truncate existing application records.
 
 After installation, remove or blank the `INSTALL_ADMIN_EMAIL` and `INSTALL_ADMIN_PASSWORD` lines in `.env`. Keep the administrator password somewhere safe.
 

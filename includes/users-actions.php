@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $isActive = isset($_POST['is_active']) && $_POST['is_active'] === '1';
     $validRole = false;
     if ($roleId !== false && $roleId !== null) {
-        $roleCheck = $pdo->prepare('SELECT label FROM user_role WHERE role_id = ?');
+        $roleCheck = $pdo->prepare('SELECT code FROM user_role WHERE role_id = ?');
         $roleCheck->execute([$roleId]);
         $roleLabel = $roleCheck->fetchColumn();
         $validRole = (bool) $roleLabel;
@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($userId) {
             $beforeQuery = $pdo->prepare(
                 'SELECT app_user.user_id, app_user.full_name, app_user.email,
-                        app_user.role_id, user_role.label AS role, app_user.is_active
+                        app_user.role_id, user_role.code AS role, app_user.is_active
                  FROM app_user JOIN user_role ON user_role.role_id = app_user.role_id
                  WHERE app_user.user_id = ?'
             );
@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->prepare($sql)->execute($values);
             $afterQuery = $pdo->prepare(
                 'SELECT app_user.user_id, app_user.full_name, app_user.email,
-                        app_user.role_id, user_role.label AS role, app_user.is_active
+                        app_user.role_id, user_role.code AS role, app_user.is_active
                  FROM app_user JOIN user_role ON user_role.role_id = app_user.role_id
                  WHERE app_user.user_id = ?'
             );

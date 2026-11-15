@@ -54,10 +54,10 @@
             if ($page === 'harvests') {
                 $harvestedStatus = db()->prepare(
                     "UPDATE planting
-                     SET status_id = (SELECT status_id FROM planting_status WHERE code = 'harvested'),
+                     SET status_id = (SELECT status_id FROM planting_status WHERE lower(code) = 'harvested'),
                          updated_at = now()
                      WHERE planting_id = ?
-                       AND status_id = (SELECT status_id FROM planting_status WHERE code = 'ready')"
+                       AND status_id = (SELECT status_id FROM planting_status WHERE lower(code) = 'ready to harvest')"
                 );
                 $harvestedStatus->execute([$data['planting_id']]);
 
@@ -65,7 +65,7 @@
                     throw new DomainException('That planting is no longer ready for harvest.');
                 }
                 audit('UPDATE', 'planting', (int) $data['planting_id'], [
-                    'status' => ['before' => 'ready', 'after' => 'harvested'],
+                    'status' => ['before' => 'Ready to harvest', 'after' => 'Harvested'],
                 ]);
             }
 

@@ -38,7 +38,7 @@ Tables use a single-column surrogate primary key. Each descriptive attribute bel
 
 Controlled descriptions are kept in lookup tables and operational rows store their integer foreign keys. Crop category depends on the crop type, while growing period and recommended season depend on a specific crop variety. Therefore `crop` and `crop_variety` are separate. Planting refers to a variety; harvest refers to a planting. User roles, planting states, soil types, irrigation types, seasons, grades, remarks, audit actions, and audit entity types each have their own table.
 
-The text `code` columns in lookup tables are unique stable identifiers for application seed data. Operational relationships use the numeric primary keys. Human-readable labels are stored once in each lookup table.
+Lookup tables keep one unique, human-readable `code` value, for example “Ready to harvest” or “Good Harvest.” The numeric primary keys are used for operational foreign-key relationships, so display text is not duplicated in separate label/description columns.
 
 ## Attribute types
 

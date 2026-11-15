@@ -81,7 +81,7 @@ try {
             $name,
             $email,
             password_hash($password, PASSWORD_DEFAULT),
-            'administrator',
+            'Administrator',
         ]);
 
         echo "Administrator account ensured for {$email}\n";

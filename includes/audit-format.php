@@ -47,9 +47,14 @@ $changeSummary = static function (array $log) use ($decodeDetails, $recordName, 
     if (isset($details['status']) && is_array($details['status'])) {
         $before = (string) ($details['status']['before'] ?? 'unknown');
         $after = (string) ($details['status']['after'] ?? 'unknown');
-        $statusName = static fn (string $value): string => $value === 'ready'
-            ? 'ready to harvest'
-            : str_replace('_', ' ', $value);
+        $statusName = static fn (string $value): string => match (strtolower($value)) {
+            'ready', 'ready to harvest' => 'Ready to harvest',
+            'planting' => 'Planting',
+            'growing' => 'Growing',
+            'harvested' => 'Harvested',
+            'cancelled' => 'Cancelled',
+            default => $value,
+        };
         return $subject . ' status: ' . $statusName($before) . ' → ' . $statusName($after);
     }
     $before = $details['before'] ?? null;
