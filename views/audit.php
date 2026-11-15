@@ -39,13 +39,55 @@ $logs = $pdo->prepare(
 );
 $logs->execute($params);
 $logs = $logs->fetchAll();
+$summarizeChanges = static function (?array $details): string {
+    if (!$details) {
+        return '';
+    }
+    if (isset($details['status']) && is_array($details['status'])) {
+        $status = $details['status'];
+        $statusLabel = static function ($value): string {
+            $value = (string) $value;
+            return $value === 'ready' ? 'Ready to harvest' : ucwords(str_replace('_', ' ', $value ?: 'Unknown'));
+        };
+        return 'Status: ' . $statusLabel($status['before'] ?? 'Unknown')
+            . ' → ' . $statusLabel($status['after'] ?? 'Unknown');
+    }
+    $before = $details['before'] ?? null;
+    $after = $details['after'] ?? null;
+    if (!is_array($before) || !is_array($after)) {
+        return '';
+    }
+    $ignored = ['created_at', 'updated_at'];
+    $changes = [];
+    foreach ($after as $key => $newValue) {
+        if (in_array($key, $ignored, true) || !array_key_exists($key, $before)) {
+            continue;
+        }
+        if (str_ends_with((string) $key, '_id') && array_key_exists(substr((string) $key, 0, -3), $after)) {
+            continue;
+        }
+        $oldValue = $before[$key];
+        if ((string) ($oldValue ?? '') === (string) ($newValue ?? '')) {
+            continue;
+        }
+        $label = ucwords(str_replace('_', ' ', preg_replace('/_id$/', '', (string) $key)));
+        $format = static function ($value) use ($key): string {
+            if ($value === null || $value === '') return 'Empty';
+            if ($key === 'is_active') return $value ? 'Active' : 'Inactive';
+            if (is_bool($value)) return $value ? 'Yes' : 'No';
+            return ucwords(str_replace('_', ' ', (string) $value));
+        };
+        $changes[] = $label . ': ' . $format($oldValue) . ' → ' . $format($newValue);
+    }
+    return implode('; ', $changes);
+};
 require __DIR__ . '/layout-top.php';
 ?>
 <section class="section">
     <div class="container">
         <p class="eyebrow">ADMINISTRATOR ONLY</p>
         <h1 class="title is-3">Detailed audit logs</h1>
-        <p class="subtitle is-6">Review who changed a record, when it happened, and the saved before and after values.</p>
+        <p class="subtitle is-6">Review user activity and concise summaries of record updates.</p>
         <div class="box table-card">
             <form method="get" class="field has-addons">
                 <input type="hidden" name="page" value="audit">
@@ -62,22 +104,16 @@ require __DIR__ . '/layout-top.php';
                             if (is_string($details)) {
                                 $details = json_decode($details, true) ?: null;
                             }
+                            $changeSummary = $log['action'] === 'Update'
+                                ? $summarizeChanges(is_array($details) ? $details : null)
+                                : '';
                             ?>
                             <tr>
-                                <td><?= e(date('M j, Y g:i:s A', strtotime($log['occurred_at']))) ?></td>
+                                <td><?= e((new DateTimeImmutable($log['occurred_at']))->setTimezone(new DateTimeZone('Asia/Manila'))->format('M j, Y g:i:s A')) ?></td>
                                 <td><?= e($log['full_name'] ?? 'Deleted user') ?><br><small><?= e($log['email'] ?? '') ?></small></td>
                                 <td><?= e($log['action'] . ' · ' . $log['entity']) ?></td>
                                 <td>#<?= e($log['entity_record_id'] ?? '—') ?></td>
-                                <td>
-                                    <?php if ($details): ?>
-                                        <details>
-                                            <summary>View values</summary>
-                                            <pre class="audit-details"><?= e(json_encode($details, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)) ?></pre>
-                                        </details>
-                                    <?php else: ?>
-                                        <span class="has-text-grey">No values captured</span>
-                                    <?php endif; ?>
-                                </td>
+                                <td><?= $changeSummary !== '' ? e($changeSummary) : '<span class="has-text-grey">—</span>' ?></td>
                             </tr>
                         <?php endforeach; ?>
                         <?php if (!$logs): ?><tr><td colspan="5" class="has-text-centered">No audit events found.</td></tr><?php endif; ?>

@@ -284,31 +284,34 @@ if ($editId) {
     $record = $statement->fetch();
 }
 
-$search = trim($_GET['q'] ?? '');
-$searchFields = [
-    $primaryKey => [
-        'label' => ucwords(str_replace('_', ' ', $primaryKey)),
-        'type' => 'integer',
-    ],
+$filterFields = [
+    $primaryKey => ['label' => 'ID', 'type' => 'integer'],
 ];
 foreach ($module['fields'] as [$fieldKey, $fieldLabel, $fieldType]) {
-    if ($fieldType === 'computed-date') {
-        $searchFields[$fieldKey] = ['label' => $fieldLabel, 'type' => 'date'];
-    } else {
-        $searchFields[$fieldKey] = [
-            'label' => $fieldLabel,
-            'type' => in_array($fieldType, ['text', 'email'], true)
-                ? 'text'
-                : (str_starts_with($fieldType, 'ref:') || str_starts_with($fieldType, 'lookup:')
-                    ? 'integer'
-                    : ($fieldType === 'date' ? 'date' : 'number')),
-        ];
-    }
+    $filterFields[$fieldKey] = [
+        'label' => $fieldLabel,
+        'type' => in_array($fieldType, ['text', 'email'], true)
+            ? 'text'
+            : (str_starts_with($fieldType, 'ref:') || str_starts_with($fieldType, 'lookup:')
+                ? 'related'
+                : ($fieldType === 'date' || $fieldType === 'computed-date' ? 'date' : 'number')),
+        'source' => $fieldType,
+    ];
 }
-$defaultSearchBy = $module['search'][0] ?? $primaryKey;
-$searchBy = (string) ($_GET['search_by'] ?? $defaultSearchBy);
-if (!isset($searchFields[$searchBy])) {
-    $searchBy = $primaryKey;
+$lookupTables = [
+    'soil_type' => ['id' => 'soil_type_id', 'label' => 'label'],
+    'irrigation_type' => ['id' => 'irrigation_type_id', 'label' => 'label'],
+    'crop_category' => ['id' => 'crop_category_id', 'label' => 'label'],
+    'growing_season' => ['id' => 'growing_season_id', 'label' => 'label'],
+    'quality_grade' => ['id' => 'quality_grade_id', 'label' => 'label'],
+    'planting_status' => ['id' => 'status_id', 'label' => 'label'],
+];
+$filters = [];
+foreach ($filterFields as $fieldKey => $fieldInfo) {
+    $value = trim((string) ($_GET['filter'][$fieldKey] ?? ''));
+    if ($value !== '') {
+        $filters[$fieldKey] = $value;
+    }
 }
 $sort = $_GET['sort'] ?? $primaryKey;
 $allowedSort = array_merge(
@@ -321,33 +324,69 @@ if (!in_array($sort, $allowedSort, true)) {
 }
 
 $direction = strtolower($_GET['dir'] ?? 'desc') === 'asc' ? 'ASC' : 'DESC';
-$where = '';
+$conditions = [];
 $params = [];
 
-if ($search !== '') {
-    $searchType = $searchFields[$searchBy]['type'];
-    if ($searchType === 'text') {
-        $where = 'WHERE "' . $searchBy . '" ILIKE ?';
-        $params[] = '%' . $search . '%';
-    } elseif ($searchType === 'integer' && !ctype_digit($search)) {
-        $where = 'WHERE FALSE';
-    } elseif ($searchType === 'number' && !is_numeric($search)) {
-        $where = 'WHERE FALSE';
-    } elseif ($searchType === 'date') {
-        $searchDate = DateTimeImmutable::createFromFormat('!Y-m-d', $search);
-        if (!$searchDate || $searchDate->format('Y-m-d') !== $search) {
-            $where = 'WHERE FALSE';
-        } else {
-            $where = 'WHERE "' . $searchBy . '" = ?';
-            $params[] = $search;
-        }
-    } else {
-        $where = 'WHERE "' . $searchBy . '" = ?';
-        $params[] = $search;
+foreach ($filters as $fieldKey => $value) {
+    $info = $filterFields[$fieldKey];
+    $kind = $info['type'];
+    if ($kind === 'text') {
+        $conditions[] = 'CAST(m."' . $fieldKey . '" AS TEXT) ILIKE ?';
+        $params[] = '%' . $value . '%';
+        continue;
     }
-}
+    if ($kind === 'date') {
+        $parsedDate = DateTimeImmutable::createFromFormat('!Y-m-d', $value);
+        if (!$parsedDate || $parsedDate->format('Y-m-d') !== $value) {
+            $conditions[] = 'FALSE';
+        } else {
+            $conditions[] = 'm."' . $fieldKey . '" = ?';
+            $params[] = $value;
+        }
+        continue;
+    }
+    if ($kind === 'number' || $kind === 'integer') {
+        if (!is_numeric($value)) {
+            $conditions[] = 'FALSE';
+        } else {
+            $conditions[] = 'm."' . $fieldKey . '" = ?';
+            $params[] = $value;
+        }
+        continue;
+    }
 
-$countStatement = db()->prepare("SELECT COUNT(*) FROM \"{$table}\" {$where}");
+    $source = $info['source'];
+    if (str_starts_with($source, 'lookup:')) {
+        $lookup = substr($source, 7);
+        $lookupInfo = $lookupTables[$lookup];
+        $conditions[] = 'EXISTS (SELECT 1 FROM "' . $lookup . '" f WHERE f."'
+            . $lookupInfo['id'] . '" = m."' . $fieldKey . '" AND ('
+            . 'CAST(f."' . $lookupInfo['id'] . '" AS TEXT) = ? OR f."'
+            . $lookupInfo['label'] . '" ILIKE ?))';
+        $params[] = $value;
+        $params[] = '%' . $value . '%';
+        continue;
+    }
+
+    $reference = substr($source, 4);
+    $referenceConfig = [
+        'farmer' => ['from' => 'farmer f', 'id' => 'f.farmer_id', 'text' => "f.first_name || ' ' || f.last_name"],
+        'farm' => ['from' => 'farm f', 'id' => 'f.farm_id', 'text' => 'f.farm_name || \' \' || f.location'],
+        'crop' => ['from' => 'crop f', 'id' => 'f.crop_id', 'text' => 'f.crop_name'],
+        'crop_variety' => ['from' => 'crop_variety f JOIN crop c ON c.crop_id = f.crop_id', 'id' => 'f.variety_id', 'text' => "c.crop_name || ' / ' || f.variety_name"],
+        'harvest_remark' => ['from' => 'harvest_remark f', 'id' => 'f.remark_id', 'text' => 'f.description'],
+        'planting' => ['from' => 'planting f JOIN farm af ON af.farm_id = f.farm_id JOIN crop_variety av ON av.variety_id = f.variety_id JOIN crop ac ON ac.crop_id = av.crop_id JOIN planting_status aps ON aps.status_id = f.status_id', 'id' => 'f.planting_id', 'text' => "af.farm_name || ' ' || ac.crop_name || ' ' || av.variety_name || ' ' || aps.label || ' ' || CAST(f.planting_date AS TEXT)"],
+    ];
+    $refInfo = $referenceConfig[$reference];
+    $conditions[] = 'EXISTS (SELECT 1 FROM ' . $refInfo['from'] . ' WHERE '
+        . $refInfo['id'] . ' = m."' . $fieldKey . '" AND (CAST('
+        . $refInfo['id'] . ' AS TEXT) = ? OR ' . $refInfo['text'] . ' ILIKE ?))';
+    $params[] = $value;
+    $params[] = '%' . $value . '%';
+}
+$where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
+
+$countStatement = db()->prepare("SELECT COUNT(*) FROM \"{$table}\" m {$where}");
 $countStatement->execute($params);
 $total = (int) $countStatement->fetchColumn();
 $perPage = 10;
@@ -356,8 +395,8 @@ $currentPage = max(1, min($totalPages, (int) ($_GET['p'] ?? 1)));
 $offset = ($currentPage - 1) * $perPage;
 
 $listStatement = db()->prepare(
-    "SELECT * FROM \"{$table}\" {$where}
-     ORDER BY \"{$sort}\" {$direction}
+    "SELECT m.* FROM \"{$table}\" m {$where}
+     ORDER BY m.\"{$sort}\" {$direction}
      LIMIT {$perPage} OFFSET {$offset}"
 );
 $listStatement->execute($params);
@@ -379,14 +418,6 @@ $referenceTables = [
         'order' => 'planting.planting_id ASC',
     ],
     'harvest_remark' => ['id' => 'remark_id', 'label' => 'description', 'order' => 'sort_order, label'],
-];
-$lookupTables = [
-    'soil_type' => ['id' => 'soil_type_id', 'label' => 'label'],
-    'irrigation_type' => ['id' => 'irrigation_type_id', 'label' => 'label'],
-    'crop_category' => ['id' => 'crop_category_id', 'label' => 'label'],
-    'growing_season' => ['id' => 'growing_season_id', 'label' => 'label'],
-    'quality_grade' => ['id' => 'quality_grade_id', 'label' => 'label'],
-    'planting_status' => ['id' => 'status_id', 'label' => 'label'],
 ];
 $references = [];
 
@@ -707,19 +738,11 @@ require __DIR__ . '/views/layout-top.php';
                 <div class="box table-card">
                     <form method="get" class="field has-addons">
                         <input type="hidden" name="page" value="<?= e($page) ?>">
-
-                        <div class="control">
-                            <div class="select">
-                                <select name="search_by" aria-label="Search field">
-                                    <?php foreach ($searchFields as $fieldKey => $fieldInfo): ?>
-                                        <option value="<?= e($fieldKey) ?>" <?= $searchBy === $fieldKey ? 'selected' : '' ?>>
-                                            <?= e($fieldInfo['label']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                        </div>
-
+                        <?php foreach ($filters as $filterKey => $filterValue): ?>
+                            <?php if ($filterKey !== $primaryKey): ?>
+                                <input type="hidden" name="filter[<?= e($filterKey) ?>]" value="<?= e($filterValue) ?>">
+                            <?php endif; ?>
+                        <?php endforeach; ?>
                         <div class="control">
                             <div class="select">
                                 <select name="sort">
@@ -751,9 +774,10 @@ require __DIR__ . '/views/layout-top.php';
                         <div class="control is-expanded">
                             <input
                                 class="input"
-                                name="q"
-                                placeholder="Search records"
-                                value="<?= e($search) ?>"
+                                aria-label="Filter by record ID"
+                                name="filter[<?= e($primaryKey) ?>]"
+                                placeholder="ID"
+                                value="<?= e($filters[$primaryKey] ?? '') ?>"
                             >
                         </div>
 
@@ -761,6 +785,30 @@ require __DIR__ . '/views/layout-top.php';
                             <button class="button">Search</button>
                         </div>
                     </form>
+
+                    <details class="mb-4" <?= count($filters) > 0 ? 'open' : '' ?>>
+                        <summary class="is-clickable">Filter by module fields</summary>
+                        <form method="get" class="columns is-multiline mt-2">
+                            <input type="hidden" name="page" value="<?= e($page) ?>">
+                            <input type="hidden" name="sort" value="<?= e($sort) ?>">
+                            <input type="hidden" name="dir" value="<?= e(strtolower($direction)) ?>">
+                            <?php if (!empty($filters[$primaryKey])): ?>
+                                <input type="hidden" name="filter[<?= e($primaryKey) ?>]" value="<?= e($filters[$primaryKey]) ?>">
+                            <?php endif; ?>
+                            <?php foreach ($module['fields'] as [$fieldKey, $fieldLabel]): ?>
+                                <div class="column is-one-quarter-desktop is-half-tablet">
+                                    <label class="label is-small" for="filter-<?= e($fieldKey) ?>"><?= e($fieldLabel) ?></label>
+                                    <input class="input is-small" id="filter-<?= e($fieldKey) ?>"
+                                        name="filter[<?= e($fieldKey) ?>]" value="<?= e($filters[$fieldKey] ?? '') ?>"
+                                        placeholder="<?= e(str_contains($fieldKey, '_id') ? 'ID or name' : 'Filter value') ?>">
+                                </div>
+                            <?php endforeach; ?>
+                            <div class="column is-full">
+                                <button class="button is-small">Apply filters</button>
+                                <a class="button is-small is-light" href="<?= e(url('page=' . $page)) ?>">Clear</a>
+                            </div>
+                        </form>
+                    </details>
 
                     <div class="table-container">
                         <table class="table is-fullwidth is-hoverable">
@@ -840,16 +888,9 @@ require __DIR__ . '/views/layout-top.php';
                     </div>
 
                     <?php
-                    $previousUrl = url('page=' . $page . '&p=' . max(1, $currentPage - 1)
-                        . '&q=' . urlencode($search)
-                        . '&search_by=' . urlencode($searchBy)
-                        . '&sort=' . urlencode($sort)
-                        . '&dir=' . urlencode(strtolower($direction)));
-                    $nextUrl = url('page=' . $page . '&p=' . min($totalPages, $currentPage + 1)
-                        . '&q=' . urlencode($search)
-                        . '&search_by=' . urlencode($searchBy)
-                        . '&sort=' . urlencode($sort)
-                        . '&dir=' . urlencode(strtolower($direction)));
+                    $pageQuery = ['page' => $page, 'sort' => $sort, 'dir' => strtolower($direction), 'filter' => $filters];
+                    $previousUrl = url(http_build_query($pageQuery + ['p' => max(1, $currentPage - 1)]));
+                    $nextUrl = url(http_build_query($pageQuery + ['p' => min($totalPages, $currentPage + 1)]));
                     ?>
                     <nav class="pagination is-right">
                         <a
