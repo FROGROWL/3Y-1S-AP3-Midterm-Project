@@ -99,7 +99,27 @@
         padding: 1rem;
     }
 
+    .login-shell {
+        max-width: 34rem;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1.5rem;
+    }
+
+    .login-intro .title {
+        font-size: clamp(2rem, 9vw, 3rem);
+    }
+
+    .login-highlights {
+        gap: 0.5rem;
+        margin-top: 1.25rem;
+    }
+
+    .login-highlight {
+        padding: 0.8rem;
+    }
+
     .login-card {
+        width: 100%;
         padding: 1.5rem;
     }
 
