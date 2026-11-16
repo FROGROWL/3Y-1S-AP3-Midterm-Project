@@ -2,11 +2,7 @@
 $record = null;
 
 if ($editId) {
-    $statement = db()->prepare(
-        "SELECT * FROM \"{$table}\" WHERE \"{$primaryKey}\" = ?"
-    );
-    $statement->execute([$editId]);
-    $record = $statement->fetch();
+    $record = $entity->getById((int) $editId);
 }
 $moduleName = match ($page) {
     'farmers' => 'Farmer',

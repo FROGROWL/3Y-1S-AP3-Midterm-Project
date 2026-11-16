@@ -17,6 +17,7 @@ This guide shows where to make changes without having to read a large all-purpos
 | Application entry | `index.php`, `modules.php` | Routes requests; `modules.php` registers the supported data modules using their definition classes. |
 | Shared startup | `bootstrap.php`, `includes/core/` | Runtime/session setup, environment loading, database connection, shared helpers, audit events, and authentication. |
 | Module pages | `module.php`, `includes/modules/`, `views/module.php`, `views/modules/` | Shared CRUD page orchestration, validation, planting/harvest rules, database writes, filter/list data, forms, and tables. |
+| Entity classes | `includes/entities/` | PDO-backed `Farmer`, `Farm`, `Crop`, `CropVariety`, `Planting`, and `Harvest` classes provide record lookup and CRUD methods; shared module handlers retain validation, transactions, and audit behavior. |
 | Dashboard | `includes/dashboard-data.php`, `includes/dashboard/`, `views/dashboard.php`, `views/dashboard/` | Dashboard actions and data queries are separate from its hero, snapshots, activity, harvest, and audit panels. |
 | Reports | `includes/reports-data.php`, `includes/reports/`, `views/reports.php`, `views/reports/` | Report filters and query context, aggregation, sorting/chart values, and display sections. |
 | Audit and users | `includes/audit-*.php`, `includes/users-*.php`, `views/audit.php`, `views/users.php` | Feature-specific data and actions stay outside the HTML templates. |
@@ -25,6 +26,7 @@ This guide shows where to make changes without having to read a large all-purpos
 ### Shared module files
 
 - `includes/modules/definitions/`: one small definition class per data module (farmers, farms, crops, crop varieties, plantings, and harvests). Each class supplies the table, primary key, labels, and form fields used by the shared CRUD flow.
+- `includes/entities/`: PDO-backed entity classes for the six data modules; `Entity.php` contains their shared safe CRUD implementation.
 
 - `includes/modules/delete.php`: deletes the selected record and records the audit event.
 - `includes/modules/delete-support.php`: builds readable record snapshots, counts cascade effects, and checks deletion restrictions for confirmation dialogs and audit details.

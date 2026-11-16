@@ -4,19 +4,7 @@
     try {
         if ($id) {
             $before = moduleDeleteSnapshot($table, $id);
-            $assignments = implode(
-                ', ',
-                array_map(fn ($column) => '"' . $column . '" = ?', array_keys($data))
-            );
-            $values = array_values($data);
-            $values[] = $id;
-
-            $statement = db()->prepare(
-                "UPDATE \"{$table}\"
-                 SET {$assignments}, updated_at = now()
-                 WHERE \"{$primaryKey}\" = ?"
-            );
-            $statement->execute($values);
+            $entity->update((int) $id, $data);
 
             audit('UPDATE', $table, $id, [
                 'before' => $before,
@@ -24,19 +12,7 @@
             ]);
             flash('success', $module['title'] . ' updated.');
         } else {
-            $columns = implode(
-                ', ',
-                array_map(fn ($column) => '"' . $column . '"', array_keys($data))
-            );
-            $placeholders = implode(', ', array_fill(0, count($data), '?'));
-
-            $statement = db()->prepare(
-                "INSERT INTO \"{$table}\" ({$columns})
-                 VALUES ({$placeholders})
-                 RETURNING \"{$primaryKey}\""
-            );
-            $statement->execute(array_values($data));
-            $newId = (int) $statement->fetchColumn();
+            $newId = $entity->create($data);
             $createdRecord = moduleDeleteSnapshot($table, $newId) ?: $data;
 
             if ($page === 'harvests') {

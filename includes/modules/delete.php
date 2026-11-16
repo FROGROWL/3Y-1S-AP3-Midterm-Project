@@ -20,8 +20,7 @@ try {
     if (moduleDeleteBlocked($table, $impact)) {
         throw new DomainException('This record is still used by planting records. Delete those plantings first.');
     }
-    $statement = db()->prepare("DELETE FROM \"{$table}\" WHERE \"{$primaryKey}\" = ?");
-    $statement->execute([$id]);
+    $entity->delete($id);
     audit('DELETE', $table, $id, ['before' => $before, 'affected' => $impact]);
     db()->commit();
     flash('success', $module['title'] . ' record deleted.');
