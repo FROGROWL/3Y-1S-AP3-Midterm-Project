@@ -8,7 +8,7 @@ const appendText = (parent, tag, text, className = '') => {
     return node;
 };
 
-const showDialog = ({ title, message = '', impact = '', confirmLabel = 'Continue', danger = false, details = null }) => {
+const showDialog = ({ title, message = '', impact = '', confirmLabel = 'Continue', danger = false, details = null, blocked = false }) => {
     const element = dialog();
     if (!element) return Promise.resolve(false);
     const heading = element.querySelector('[data-dialog-title]');
@@ -36,6 +36,7 @@ const showDialog = ({ title, message = '', impact = '', confirmLabel = 'Continue
         if (confirmLabel) {
             const accept = document.createElement('button');
             accept.type = 'button'; accept.className = danger ? 'button is-danger' : 'button is-primary';
+            if (blocked) accept.classList.add('is-blocked-action');
             accept.textContent = confirmLabel;
             accept.addEventListener('click', () => finish(true), { once: true });
             actions.append(accept);
@@ -109,6 +110,7 @@ document.addEventListener('submit', async (event) => {
         impact: form.dataset.confirmImpact || '',
         confirmLabel: form.dataset.confirmLabel || 'Delete',
         danger: true,
+        blocked: form.dataset.confirmBlocked === '1',
     });
     if (!ok || form.dataset.confirmBlocked === '1') return;
     form.dataset.confirmed = '1';
@@ -117,8 +119,12 @@ document.addEventListener('submit', async (event) => {
     form.requestSubmit(event.submitter || undefined);
 });
 
-document.addEventListener('DOMContentLoaded', () => {
+window.initializeAppNotices = () => {
     document.querySelectorAll('[data-app-notice]').forEach((notice) => {
+        if (notice.dataset.noticeInitialized === '1') return;
+        notice.dataset.noticeInitialized = '1';
         if (notice.dataset.noticeType !== 'danger') setTimeout(() => notice.remove(), 7000);
     });
-});
+};
+
+document.addEventListener('DOMContentLoaded', window.initializeAppNotices, { once: true });

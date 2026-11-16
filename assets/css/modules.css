@@ -19,13 +19,6 @@
     min-width: min(100%, 12rem);
 }
 
-.module-layout form[data-confirm-blocked="1"] button {
-    border-color: var(--border);
-    background: var(--surface-raised);
-    color: var(--muted);
-    cursor: not-allowed;
-}
-
 .planting-cycle-details {
     margin-top: 0.75rem;
     border: 2px solid var(--border);
