@@ -36,6 +36,7 @@ AgriInfo is a web-based agriculture information system for recording farmer and 
 - Planting status overrides that fall outside the date-based guideline require an in-app confirmation dialog before saving.
 - Planting entry calculates expected harvest date from variety growing-period days, checks remaining farm area, and validates planting status against the planting and harvest dates.
 - Harvest entry is limited to plantings that are ready to harvest. Quantity and selling price are used to show an estimated gross total; saving a harvest updates the planting status.
+- A harvest date must be later than its selected planting date; the date picker prevents earlier dates and server-side validation enforces the same rule.
 - Dashboard watch lists highlight planting and harvest items that need attention. Dashboard lists paginate when they exceed seven items; module lists paginate when they exceed ten.
 
 ### Oversight and reporting

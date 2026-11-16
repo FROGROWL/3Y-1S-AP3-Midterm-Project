@@ -58,6 +58,7 @@
                                                         <?php if ($showPlantingDetails): ?>
                                                             data-planting-crop="<?= e($details['crop'] ?? '') ?>"
                                                             data-planting-farm="<?= e($details['farm'] ?? '') ?>"
+                                                            data-planting-date="<?= e($details['planting_date'] ?? '') ?>"
                                                             data-planting-planted="<?= e($details['planted'] ?? '') ?>"
                                                             data-planting-expected="<?= e($details['expected'] ?? '') ?>"
                                                             data-planting-status="<?= e($details['status'] ?? '') ?>"
@@ -130,6 +131,7 @@
                                             id="<?= e($key) ?>"
                                             name="<?= e($key) ?>"
                                             type="<?= e($type === 'number' ? 'number' : $type) ?>"
+                                            <?= $page === 'harvests' && $key === 'harvest_date' ? 'data-harvest-date' : '' ?>
                                             <?= $type === 'number' ? 'step="0.01" min="0"' : '' ?>
                                             value="<?= e($record[$key] ?? '') ?>"
                                             <?= $required ? 'required' : '' ?>

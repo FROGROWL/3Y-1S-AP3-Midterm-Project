@@ -97,6 +97,7 @@ if ($page === 'harvests') {
         "SELECT planting.planting_id,
                 crop.crop_name || ' / ' || variety.variety_name AS crop,
                 farm.farm_name AS farm,
+                planting.planting_date::text AS planting_date,
                 to_char(planting.planting_date, 'Mon DD, YYYY') AS planted,
                 coalesce(
                     to_char(planting.expected_harvest_date, 'Mon DD, YYYY'),
@@ -117,6 +118,7 @@ if ($page === 'harvests') {
             "SELECT planting.planting_id,
                     crop.crop_name || ' / ' || variety.variety_name AS crop,
                     farm.farm_name AS farm,
+                    planting.planting_date::text AS planting_date,
                     to_char(planting.planting_date, 'Mon DD, YYYY') AS planted,
                     COALESCE(to_char(planting.expected_harvest_date, 'Mon DD, YYYY'), 'Not set') AS expected,
                     planting_status.code AS status
