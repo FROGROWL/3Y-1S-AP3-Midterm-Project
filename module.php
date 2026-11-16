@@ -5,7 +5,6 @@ $table = $module['table'];
 $primaryKey = $module['pk'];
 $editId = filter_input(INPUT_GET, 'edit', FILTER_VALIDATE_INT) ?: null;
 
-require_once __DIR__ . '/includes/entities/Entity.php';
 require_once __DIR__ . '/includes/entities/Farmer.php';
 require_once __DIR__ . '/includes/entities/Farm.php';
 require_once __DIR__ . '/includes/entities/Crop.php';
