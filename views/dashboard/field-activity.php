@@ -34,7 +34,7 @@
             <div class="column is-4">
                 <section class="box dashboard-panel harvest-watch">
                     <p class="eyebrow">READY · DUE WITHIN 20 DAYS</p>
-                    <h3 class="title is-5">Harvest watch</h3>
+                    <h3 class="title is-5">Harvest watch</h3> 
                     <?php if ($harvestWatch): ?>
                         <div class="watch-list">
                             <?php foreach ($harvestWatch as $planting): ?>
