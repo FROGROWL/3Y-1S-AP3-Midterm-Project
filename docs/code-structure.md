@@ -38,6 +38,7 @@ This guide shows where to make changes without having to read a large all-purpos
 
 - `assets/css/`: theme tokens and styles grouped by base, navigation, dashboard layout and panels, components, forms, modules, reports, and responsive layout.
 - `assets/js/`: theme toggle, mobile navigation, shared confirmation/audit dialogs and notices, planting form behavior, harvest form behavior, and report behavior.
+- `assets/js/pagination.js`: handles same-origin page navigation and form submissions with fetch, replaces the content region, and updates browser history without a full page load.
 - `assets/app.css`, `assets/app.js`: small entry files that import the feature files.
 
 The JavaScript entry is loaded as an ES module so the browser can resolve its imports.

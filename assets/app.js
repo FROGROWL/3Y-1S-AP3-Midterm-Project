@@ -4,4 +4,4 @@ import './js/navigation.js';
 import './js/planting-form.js';
 import './js/harvest-form.js';
 import './js/reports.js';
-import './js/pagination.js';
+import './js/pagination.js?v=2';

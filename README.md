@@ -116,6 +116,7 @@ In pgAdmin, register a server with the same Supabase host, port, database, usern
 - Login, password hashing, CSRF protection, Staff and Administrator roles, and audit records.
 - CRUD pages for farmers, farms, crops, plantings, and harvests.
 - Field-based filters, sorting, pagination, relationship dropdowns, and validation.
+- Page navigation, filters, and record actions update the page content in place without a full browser reload; browser back and forward navigation are supported.
 - Theme-styled popup notifications for success, errors, and other feedback. Delete confirmations identify the record and describe related records that would also be removed; deletions blocked by relationships explain what must be removed first.
 - Audit log detail popups show the saved record information, creation time, before/after values for updates, and cascade counts for deletions.
 - Administrators can create, edit, and delete other user accounts. The signed-in administrator cannot delete their own account; user deletion retains audit history while clearing its association with the deleted account.

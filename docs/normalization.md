@@ -28,7 +28,7 @@ A raw farm activity sheet can combine farmer contact details, farm attributes, c
 
 ## 1NF
 
-Each row represents one farmer, farm, crop type, crop variety, planting, or harvest. Values that can repeat are stored as separate rows; names, dates, measurements, and addresses remain single values in their columnsa.
+Each row represents one farmer, farm, crop type, crop variety, planting, or harvest. Values that can repeat are stored as separate rows; names, dates, measurements, and addresses remain single values in their columns.
 
 ## 2NF
 
