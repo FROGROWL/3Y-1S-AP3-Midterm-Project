@@ -82,7 +82,7 @@ require __DIR__ . '/layout-top.php';
                             <tr>
                                 <td><?= e((new DateTimeImmutable($log['occurred_at']))->setTimezone(new DateTimeZone('Asia/Manila'))->format('M j, Y g:i:s A')) ?></td>
                                 <td><?= e($log['full_name'] ?? 'Deleted user') ?><br><small><?= e($log['email'] ?? '') ?></small></td>
-                                <td><?= e($log['action'] . ' Â· ' . $log['entity']) ?></td>
+                                <td><?= e($log['action']) ?> <span aria-hidden="true">&middot;</span> <?= e($log['entity']) ?></td>
                                 <td>
                                     <?= $summary !== '' ? e($summary) : '<span class="has-text-grey">—</span>' ?>
                                     <?php if ($detailPayload): ?>
