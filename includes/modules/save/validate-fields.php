@@ -12,6 +12,11 @@
             go('page=' . $page . ($id ? '&edit=' . $id : ''));
         }
 
+        if ($key === 'contact_number' && $value !== '' && !preg_match('/^[0-9]{11}$/', $value)) {
+            flash('danger', 'Contact number must contain exactly 11 digits, with no spaces or symbols.');
+            go('page=' . $page . ($id ? '&edit=' . $id : ''));
+        }
+
         if (
             $value !== ''
             && (str_starts_with($type, 'ref:') || str_starts_with($type, 'lookup:'))

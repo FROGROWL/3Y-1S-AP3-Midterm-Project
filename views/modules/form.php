@@ -109,6 +109,21 @@
                                         </div>
                                     <?php elseif ($type === 'computed-date'): ?>
                                         <input class="input" id="expected_harvest_date" type="date" value="<?= e($record['expected_harvest_date'] ?? '') ?>" readonly data-expected-harvest-date>
+                                    <?php elseif ($key === 'contact_number'): ?>
+                                        <input
+                                            class="input"
+                                            id="<?= e($key) ?>"
+                                            name="<?= e($key) ?>"
+                                            type="tel"
+                                            inputmode="numeric"
+                                            pattern="[0-9]{11}"
+                                            minlength="11"
+                                            maxlength="11"
+                                            title="Enter exactly 11 digits, with no spaces or symbols."
+                                            value="<?= e($record[$key] ?? '') ?>"
+                                            <?= $required ? 'required' : '' ?>
+                                        >
+                                        <p class="help">Enter exactly 11 digits, with no spaces or symbols.</p>
                                     <?php else: ?>
                                         <input
                                             class="input <?= $page === 'plantings' && $key === 'area_planted' ? 'planting-area-input' : '' ?>"

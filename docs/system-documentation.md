@@ -28,7 +28,9 @@ AgriInfo is a web-based agriculture information system for recording farmer and 
 ### Operational records
 
 - Authorized users can create, view, edit, filter, sort, and paginate farmer, farm, crop, variety, planting, and harvest records.
+- Internal navigation, filters, and record form submissions update the content region in place. Browser back/forward navigation remains available, and a small status message indicates when a request is being processed.
 - Forms use database-backed dropdowns for related records and fixed reference values.
+- Farmer contact numbers are optional; when provided, they must contain exactly 11 digits. The form and server validate the rule while the number remains stored as text to preserve leading zeroes.
 - Success, error, and informational feedback appears in theme-styled popup notifications. Success and informational notices dismiss automatically; errors remain until dismissed.
 - Delete confirmations identify the selected record and describe the related records that would be deleted by database cascades. If a record is still referenced and cannot be deleted, the dialog explains the relationship that must be cleared first; the server checks this again when processing a deletion.
 - Planting status overrides that fall outside the date-based guideline require an in-app confirmation dialog before saving.
@@ -259,7 +261,7 @@ The installer, live database connection, sign-in against PostgreSQL, CRUD persis
 ### Work with records
 
 1. Use the navigation menu to open Farmers, Farms, Crops, Crop Varieties, Plantings, or Harvests allowed for your role.
-2. Use the module fields to filter records; choose an order field and direction to sort. Use the page controls to move through longer lists.
+2. Use the module fields to filter records; choose an order field and direction to sort. Use the page controls to move through longer lists. These actions update the content without reloading the whole page.
 3. Add or edit records with the page form. Choose related records from the dropdowns and follow validation messages. Planting expected harvest dates are calculated from the selected variety and planting date.
 4. For a harvest, select a planting marked ready to harvest, enter date/quantity/price and other requested details, review the estimated total, then save.
 5. Use dashboard watch items to open the related record. On the administrator-only Users page, administrators can create, edit, or delete other accounts. The signed-in account has no delete action and is also protected by a server-side self-delete check.

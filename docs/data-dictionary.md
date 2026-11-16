@@ -2,7 +2,7 @@
 
 | Table | Key columns | Purpose / notable rules |
 |---|---|---|
-| `farmer` | `farmer_id`, first/last name, contact, address, registration date | Person registered as farm owner/contact. Phone number and address remain text. |
+| `farmer` | `farmer_id`, first/last name, contact, address, registration date | Person registered as farm owner/contact. Contact number is optional; if entered, the application requires exactly 11 digits and stores it as text to preserve leading zeroes. |
 | `farm` | `farm_id`, `farmer_id`, `soil_type_id`, `irrigation_type_id` | Farm belongs to one farmer; area must be positive. Soil and irrigation values reference lookup tables. |
 | `soil_type` | `soil_type_id`, unique display-ready `code` | Controlled soil names such as “Clay Loam.” |
 | `irrigation_type` | `irrigation_type_id`, unique display-ready `code` | Controlled irrigation names such as “Drip Irrigation.” |
