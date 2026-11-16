@@ -78,6 +78,12 @@ const renderAuditDetails = (content, details) => {
             .map(([name, count]) => `${count} ${name}`).join(', ');
         appendText(content, 'p', `Also deleted: ${labels}.`, 'dialog-impact mt-4');
     }
+    if (Object.hasOwn(details, 'retained_audit_logs')) {
+        appendText(content, 'p', `${details.retained_audit_logs} audit log entries were retained; their user association was cleared.`, 'dialog-impact mt-4');
+    }
+    if (details.sessions_revoked) {
+        appendText(content, 'p', 'The deleted account can no longer access the system. Existing sessions are rejected on their next request.', 'dialog-impact mt-4');
+    }
 };
 
 window.showAppConfirm = (options) => showDialog(options);

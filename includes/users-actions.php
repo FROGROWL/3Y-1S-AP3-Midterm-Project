@@ -1,6 +1,57 @@
 <?php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     check_csrf();
+    if (($_POST['action'] ?? '') === 'delete_user') {
+        $targetUserId = filter_input(INPUT_POST, 'user_id', FILTER_VALIDATE_INT) ?: null;
+        if (!$targetUserId) {
+            flash('danger', 'Select a valid user account to delete.');
+            go('page=users');
+        }
+        if ($targetUserId === (int) user()['user_id']) {
+            flash('danger', 'You cannot delete your own account.');
+            go('page=users');
+        }
+        if (($_POST['confirm_delete'] ?? '') !== '1') {
+            flash('info', 'User deletion was cancelled because it was not confirmed.');
+            go('page=users');
+        }
+
+        $pdo->beginTransaction();
+        try {
+            $targetQuery = $pdo->prepare(
+                'SELECT app_user.user_id, app_user.full_name, app_user.email,
+                        user_role.code AS role, app_user.is_active, app_user.created_at,
+                        app_user.updated_at, app_user.last_login_at
+                 FROM app_user JOIN user_role ON user_role.role_id = app_user.role_id
+                 WHERE app_user.user_id = ? FOR UPDATE OF app_user'
+            );
+            $targetQuery->execute([$targetUserId]);
+            $target = $targetQuery->fetch();
+            if (!$target) {
+                $pdo->rollBack();
+                flash('danger', 'That user account no longer exists.');
+                go('page=users');
+            }
+
+            $auditCountQuery = $pdo->prepare('SELECT COUNT(*) FROM audit_log WHERE user_id = ?');
+            $auditCountQuery->execute([$targetUserId]);
+            $retainedAuditCount = (int) $auditCountQuery->fetchColumn();
+
+            $pdo->prepare('DELETE FROM app_user WHERE user_id = ?')->execute([$targetUserId]);
+            audit('DELETE', 'app_user', $targetUserId, [
+                'before' => $target,
+                'retained_audit_logs' => $retainedAuditCount,
+                'sessions_revoked' => true,
+            ]);
+            $pdo->commit();
+            flash('success', 'User account deleted. Its audit history was retained.');
+        } catch (Throwable $exception) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $exception;
+        }
+        go('page=users');
+    }
+
     $userId = filter_input(INPUT_POST, 'user_id', FILTER_VALIDATE_INT) ?: null;
     $name = trim((string) ($_POST['full_name'] ?? ''));
     $email = trim((string) ($_POST['email'] ?? ''));

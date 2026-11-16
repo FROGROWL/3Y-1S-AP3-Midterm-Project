@@ -38,7 +38,7 @@ AgriInfo is a web-based agriculture information system for recording farmer and 
 
 ### Oversight and reporting
 
-- Administrators can add or edit user accounts and review audit activity.
+- Administrators can add, edit, and delete other user accounts and review audit activity. The signed-in administrator cannot delete their own account. Deleting a user retains their audit events and clears the deleted account's user reference; their existing sessions are rejected on the next request.
 - Audit logs record sign-in/sign-out and record changes with date, action, module, user, and concise change details. A **View details** popup displays the available record fields, creation timestamp, before/after snapshots for updates, and related-row counts for deletions. Sensitive password/hash fields are excluded.
 - Administrators can build farm or crop performance reports with a date range, grouping, metric, filters, and sort direction. Measures include recorded and projected quantity/value, harvest count, average yield, quality, and cancelled plantings.
 
@@ -262,7 +262,7 @@ The installer, live database connection, sign-in against PostgreSQL, CRUD persis
 2. Use the module fields to filter records; choose an order field and direction to sort. Use the page controls to move through longer lists.
 3. Add or edit records with the page form. Choose related records from the dropdowns and follow validation messages. Planting expected harvest dates are calculated from the selected variety and planting date.
 4. For a harvest, select a planting marked ready to harvest, enter date/quantity/price and other requested details, review the estimated total, then save.
-5. Use dashboard watch items to open the related record. Administrator-only Users, Reports, and Audit pages are available from the Administrator navigation.
+5. Use dashboard watch items to open the related record. On the administrator-only Users page, administrators can create, edit, or delete other accounts. The signed-in account has no delete action and is also protected by a server-side self-delete check.
 6. When deleting a record, review the confirmation dialog. It identifies the record and lists dependent data that will be removed, or explains if related plantings prevent the deletion.
 7. Sign out when finished, especially on shared computers. Administrators can open Audit Logs and select **View details** to inspect the saved record snapshot and change information.
 

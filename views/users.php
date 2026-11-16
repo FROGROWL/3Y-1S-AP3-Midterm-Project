@@ -39,7 +39,24 @@ require __DIR__ . '/layout-top.php';
                                     <td><?= filter_var($account['is_active'], FILTER_VALIDATE_BOOLEAN) ? 'Enabled' : 'Disabled' ?></td>
                                     <td><?= filter_var($account['is_online'], FILTER_VALIDATE_BOOLEAN) ? 'Active' : 'Inactive' ?><?php if ($account['last_activity_at']): ?><br><small>Last seen <?= e(date('M j, g:i A', strtotime($account['last_activity_at']))) ?></small><?php endif; ?></td>
                                     <td><?= $account['last_login_at'] ? e(date('M j, Y g:i A', strtotime($account['last_login_at']))) : 'Never' ?></td>
-                                    <td><a class="button is-small is-light" href="<?= e(url('page=users&edit=' . $account['user_id'])) ?>">Edit</a></td>
+                                    <td class="actions">
+                                        <a class="button is-small is-light" href="<?= e(url('page=users&edit=' . $account['user_id'])) ?>">Edit</a>
+                                        <?php if ((int) $account['user_id'] !== (int) user()['user_id']): ?>
+                                            <form method="post" data-app-confirm
+                                                data-confirm-title="Delete user account?"
+                                                data-confirm-message="Permanently delete <?= e($account['full_name']) ?> (<?= e($account['email']) ?>)?"
+                                                data-confirm-impact="<?= number_format((int) $account['audit_log_count']) ?> audit log entries will be retained, but their user association will be cleared. This account's active sessions will lose access on their next request."
+                                                data-confirm-label="Delete account">
+                                                <input type="hidden" name="csrf" value="<?= e(csrf()) ?>">
+                                                <input type="hidden" name="action" value="delete_user">
+                                                <input type="hidden" name="user_id" value="<?= e($account['user_id']) ?>">
+                                                <input type="hidden" name="confirm_delete" value="0">
+                                                <button class="button is-small is-danger is-light">Delete</button>
+                                            </form>
+                                        <?php else: ?>
+                                            <span class="tag is-light">You</span>
+                                        <?php endif; ?>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                             <?php if (!$users): ?><tr><td colspan="6">No accounts found.</td></tr><?php endif; ?>
